@@ -1,13 +1,13 @@
 import React from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { 
-  ShieldCheck, 
-  LayoutDashboard, 
-  UserPlus, 
-  CheckSquare, 
-  LogOut, 
-  User 
+import {
+  ShieldCheck,
+  LayoutDashboard,
+  UserPlus,
+  CheckSquare,
+  LogOut,
+  User,
 } from "lucide-react";
 
 export const DashboardLayout = () => {
@@ -76,17 +76,22 @@ export const DashboardLayout = () => {
           <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand-600 text-white">
             <ShieldCheck size={18} strokeWidth={2.3} />
           </span>
-          <span className="text-sm font-bold tracking-[0.15em] text-ink uppercase">SIGAP JALAN</span>
+          <span className="text-sm font-bold tracking-[0.15em] text-ink uppercase">
+            SIGAP JALAN
+          </span>
         </div>
 
         {/* Navigation Links */}
         <nav className="flex-1 space-y-1 px-4 py-6">
           {activeMenu.map((item, index) => {
             const Icon = item.icon;
-            // Since Tugas Perbaikan and Dashboard ME might have the same path (/me), 
+            // Since Tugas Perbaikan and Dashboard ME might have the same path (/me),
             // we can distinguish them by label or let them highlight normally
-            const isActive = location.pathname === item.path && (item.label !== "Tugas Perbaikan" || location.pathname.includes("/tasks"));
-            
+            const isActive =
+              location.pathname === item.path &&
+              (item.label !== "Tugas Perbaikan" ||
+                location.pathname.includes("/tasks"));
+
             return (
               <Link
                 key={item.label + index}
@@ -97,7 +102,10 @@ export const DashboardLayout = () => {
                     : "text-muted hover:bg-slate-50 hover:text-ink"
                 }`}
               >
-                <Icon size={18} className={isActive ? "text-brand-600" : "text-muted"} />
+                <Icon
+                  size={18}
+                  className={isActive ? "text-brand-600" : "text-muted"}
+                />
                 {item.label}
               </Link>
             );
@@ -111,8 +119,12 @@ export const DashboardLayout = () => {
               <User size={16} />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-semibold text-ink">{user.email}</p>
-              <p className="text-[10px] font-medium text-brand-600 uppercase tracking-wider">{user.role}</p>
+              <p className="truncate text-xs font-semibold text-ink">
+                {user.email}
+              </p>
+              <p className="text-[10px] font-medium text-brand-600 uppercase tracking-wider">
+                {user.role}
+              </p>
             </div>
           </div>
 
@@ -132,17 +144,17 @@ export const DashboardLayout = () => {
         <header className="flex h-16 items-center justify-between border-b border-line bg-white px-8">
           <div>
             <h2 className="text-sm font-semibold text-ink">
-              {user.role === "ADMIN" 
-                ? "Panel Admin" 
-                : user.role === "SUPPORT" 
-                ? "Panel Support" 
-                : "Panel Maintenance Engineering"}
+              {user.role === "ADMIN"
+                ? "Panel Admin"
+                : user.role === "SUPPORT"
+                  ? "Panel Support"
+                  : "Panel Maintenance Engineering"}
             </h2>
           </div>
           <div className="flex items-center gap-4">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-600/10">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              Sistem Aktif
+              Hello there, {user.email}
             </span>
           </div>
         </header>
