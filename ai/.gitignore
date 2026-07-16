@@ -25,17 +25,24 @@ runs/detect/*
 runs/detect/pothole_detection/*
 
 # 6. But ALLOW Git to enter the fast run folder
-!runs/detect/pothole_detection/yolo26s_fast_run/
+!runs/detect/pothole_detection/yolo26s_extended_run/
+!runs/detect/pothole_detection/yolo26s_extended_run_2/
 
 # 7. Ignore everything else inside the fast run folder (images, logs, etc.)
-runs/detect/pothole_detection/yolo26s_fast_run/*
+runs/detect/pothole_detection/yolo26s_extended_run/*
+runs/detect/pothole_detection/yolo26s_extended_run_2/*
 
 # 8. But ALLOW Git to enter the weights folder
-!runs/detect/pothole_detection/yolo26s_fast_run/weights/
+!runs/detect/pothole_detection/yolo26s_extended_run/weights/
+!runs/detect/pothole_detection/yolo26s_extended_run_2/weights/
 
 # 9. Ignore all other files inside the weights folder
-runs/detect/pothole_detection/yolo26s_fast_run/weights/*
+runs/detect/pothole_detection/yolo26s_extended_run/weights/*
+runs/detect/pothole_detection/yolo26s_extended_run_2/weights/*
 
 # 10. Explicitly ALLOW the best and last model weight files
-!runs/detect/pothole_detection/yolo26s_fast_run/weights/best.pt
-!runs/detect/pothole_detection/yolo26s_fast_run/weights/last.pt
+!runs/detect/pothole_detection/yolo26s_extended_run/weights/best.pt
+!runs/detect/pothole_detection/yolo26s_extended_run/weights/last.pt
+
+!runs/detect/pothole_detection/yolo26s_extended_run_2/weights/best.pt
+!runs/detect/pothole_detection/yolo26s_extended_run_2/weights/last.pt
