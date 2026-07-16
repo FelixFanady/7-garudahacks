@@ -5,12 +5,14 @@ import client from "../../api/client";
 
 interface Report {
   id: number;
+  uid: string;
   location: string;
   description: string;
   reporter_name: string;
   reporter_email: string;
   source: "CITIZEN" | "SYSTEM";
   status: "MENUNGGU_VERIFIKASI" | "DIJADWALKAN" | "SELESAI";
+  is_false_report: boolean;
   scheduled_date: string | null;
   created_at: string;
 }
@@ -38,9 +40,10 @@ export const SupportDashboard = () => {
   }, []);
 
   const totalCount = reports.length;
-  const pendingCount = reports.filter(r => r.status === "MENUNGGU_VERIFIKASI").length;
-  const scheduledCount = reports.filter(r => r.status === "DIJADWALKAN").length;
+  const pendingCount = reports.filter(r => r.status === "MENUNGGU_VERIFIKASI" && !r.is_false_report).length;
+  const scheduledCount = reports.filter(r => r.status === "DIJADWALKAN" && !r.is_false_report).length;
   const resolvedCount = reports.filter(r => r.status === "SELESAI").length;
+  const falseReportCount = reports.filter(r => r.is_false_report).length;
 
   return (
     <div className="space-y-6">
@@ -120,6 +123,18 @@ export const SupportDashboard = () => {
             </div>
           </div>
         </div>
+
+        <div className="rounded-xl border border-red-100 bg-white p-5 shadow-sm">
+          <div className="flex items-center gap-4">
+            <span className="grid h-10 w-10 place-items-center rounded-lg bg-red-50 text-red-500">
+              <ShieldAlert size={20} />
+            </span>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted">False Report</p>
+              <h3 className="mt-1 text-2xl font-bold text-ink">{falseReportCount}</h3>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Reports Table/List */}
@@ -175,6 +190,15 @@ export const SupportDashboard = () => {
 
                 <div className="flex items-center gap-4">
                   {(() => {
+                    if (report.is_false_report) {
+                      return (
+                        <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-red-100 text-red-700 border border-red-200">
+                          <ShieldAlert size={11} />
+                          False Report
+                        </span>
+                      );
+                    }
+
                     const isCompleted = report.status === "SELESAI";
                     let isOverdue = false;
                     if (report.status !== "SELESAI" && report.scheduled_date) {
@@ -185,7 +209,7 @@ export const SupportDashboard = () => {
                       isOverdue = sched.getTime() < today.getTime();
                     }
 
-                    let badgeClass = "bg-slate-50 text-slate-500 border border-slate-200"; // neutral no color
+                    let badgeClass = "bg-slate-50 text-slate-500 border border-slate-200";
                     let statusLabel = report.status === "MENUNGGU_VERIFIKASI" ? "Menunggu Verifikasi" : "Dijadwalkan";
 
                     if (isCompleted) {

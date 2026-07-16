@@ -3,7 +3,8 @@ import { useParams, Link } from "react-router-dom";
 import { 
   ArrowLeft, Calendar, User, HardHat, Clock, Check, 
   Send, Image, Loader2, AlertCircle, CheckCircle2, MapPin, 
-  MessageSquare, Camera, X, CheckSquare, ChevronLeft, ChevronRight, ChevronDown, Pencil
+  MessageSquare, Camera, X, CheckSquare, ChevronLeft, ChevronRight, ChevronDown, Pencil,
+  ShieldAlert, ShieldCheck
 } from "lucide-react";
 import client from "../../api/client";
 import { useAuth } from "../../context/AuthContext";
@@ -40,6 +41,7 @@ interface Report {
     id: number;
     email: string;
   }[] | null;
+  is_false_report: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -220,6 +222,9 @@ export const ReportDetailPage = () => {
   // ME task completion state
   const [completeLoading, setCompleteLoading] = useState(false);
 
+  // False report toggle state
+  const [falseReportLoading, setFalseReportLoading] = useState(false);
+
   // Chat message states
   const [chatMessage, setChatMessage] = useState("");
   const [chatPhoto, setChatPhoto] = useState<File | null>(null);
@@ -335,6 +340,27 @@ export const ReportDetailPage = () => {
       setError(err.response?.data?.error || "Gagal menjadwalkan tugas.");
     } finally {
       setAssignLoading(false);
+    }
+  };
+
+  const handleToggleFalseReport = async () => {
+    const isFalse = report?.is_false_report;
+    const confirmMsg = isFalse
+      ? "Pulihkan laporan ini agar tampil kembali di transparansi publik?"
+      : "Tandai laporan ini sebagai laporan palsu? Laporan akan disembunyikan dari publik.";
+    if (!window.confirm(confirmMsg)) return;
+
+    setFalseReportLoading(true);
+    setError(null);
+    try {
+      const response = await client.put(`/support/reports/${id}/false-report`);
+      setReport(prev => prev ? { ...prev, is_false_report: response.data.is_false_report } : prev);
+      setAssignSuccess(response.data.message);
+      setTimeout(() => setAssignSuccess(null), 5000);
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Gagal mengubah status laporan palsu.");
+    } finally {
+      setFalseReportLoading(false);
     }
   };
 
@@ -463,6 +489,15 @@ export const ReportDetailPage = () => {
             </h2>
           </div>
           {(() => {
+            if (report.is_false_report) {
+              return (
+                <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold bg-red-100 text-red-700 border border-red-200">
+                  <ShieldAlert size={12} />
+                  False Report
+                </span>
+              );
+            }
+
             let isOverdue = false;
             if (report.status !== "SELESAI" && report.scheduled_date) {
               const sched = new Date(report.scheduled_date);
@@ -719,6 +754,17 @@ export const ReportDetailPage = () => {
         <ArrowLeft size={16} />
         Kembali ke Dashboard
       </Link>
+
+      {/* False Report Banner */}
+      {report.is_false_report && (
+        <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 ring-1 ring-red-100">
+          <ShieldAlert size={20} className="shrink-0 mt-0.5 text-red-600" />
+          <div>
+            <p className="font-semibold">Laporan Ditandai Sebagai Laporan Palsu</p>
+            <p className="text-xs text-red-600 mt-0.5">Laporan ini disembunyikan dari tampilan transparansi publik.</p>
+          </div>
+        </div>
+      )}
 
       {assignSuccess && (
         <div className="flex items-start gap-2 rounded-lg bg-emerald-50 p-4 text-sm text-success ring-1 ring-emerald-100">
@@ -1035,6 +1081,52 @@ export const ReportDetailPage = () => {
                 >
                   {completeLoading ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
                   Tandai Sebagai Selesai
+                </button>
+              </div>
+            )}
+
+            {/* False Report Toggle — Support/Admin only */}
+            {(user?.role === "SUPPORT" || user?.role === "ADMIN") && (
+              <div className={`rounded-xl border p-5 shadow-sm space-y-3 ${
+                report.is_false_report
+                  ? "border-red-200 bg-red-50/60"
+                  : "border-orange-200 bg-orange-50/60"
+              }`}>
+                <div className="flex items-center gap-2">
+                  {report.is_false_report
+                    ? <ShieldCheck size={17} className="text-red-500 shrink-0" />
+                    : <ShieldAlert size={17} className="text-orange-500 shrink-0" />
+                  }
+                  <h3 className={`font-semibold text-sm ${
+                    report.is_false_report ? "text-red-800" : "text-orange-800"
+                  }`}>
+                    {report.is_false_report ? "Status: Laporan Palsu" : "Moderasi Laporan"}
+                  </h3>
+                </div>
+                <p className={`text-xs leading-relaxed ${
+                  report.is_false_report ? "text-red-600" : "text-orange-700"
+                }`}>
+                  {report.is_false_report
+                    ? "Laporan ini saat ini disembunyikan dari publik. Klik tombol di bawah untuk memulihkannya."
+                    : "Jika laporan ini terbukti tidak valid, tandai sebagai laporan palsu untuk menyembunyikannya dari transparansi publik."
+                  }
+                </p>
+                <button
+                  onClick={handleToggleFalseReport}
+                  disabled={falseReportLoading}
+                  className={`h-10 w-full inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold text-white transition disabled:opacity-50 ${
+                    report.is_false_report
+                      ? "bg-emerald-600 hover:bg-emerald-700"
+                      : "bg-red-600 hover:bg-red-700"
+                  }`}
+                >
+                  {falseReportLoading
+                    ? <Loader2 size={15} className="animate-spin" />
+                    : report.is_false_report
+                      ? <ShieldCheck size={15} />
+                      : <ShieldAlert size={15} />
+                  }
+                  {report.is_false_report ? "Pulihkan Laporan" : "Tandai False Report"}
                 </button>
               </div>
             )}
