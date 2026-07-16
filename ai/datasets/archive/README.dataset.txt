@@ -1,6 +1,4 @@
-# pothole > 2025-01-23 6:15pm
-https://universe.roboflow.com/vasanthakumar662005/pothole-pq3lu
+https://www.kaggle.com/datasets/muskanverma24/pothole-detection-dataset-yolov11-optimized
 
-Provided by a Roboflow user
-License: CC BY 4.0
+download and extract the zip file inside the datasets folder
 
