@@ -5,19 +5,32 @@ import (
 	"fmt"
 	"log"
 	"net/smtp"
+	"os"
 )
 
-const (
-	smtpHost     = "smtp.gmail.com"
-	smtpPort     = "465"
-	smtpEmail    = "fx.fanady@gmail.com"
-	smtpPassword = "psil rrrg kelt qxwg"
-)
+// smtpConfig holds SMTP credentials loaded from environment variables.
+type smtpConfig struct {
+	host     string
+	port     string
+	email    string
+	password string
+}
+
+func loadSMTPConfig() smtpConfig {
+	return smtpConfig{
+		host:     os.Getenv("SMTP_HOST"),
+		port:     os.Getenv("SMTP_PORT"),
+		email:    os.Getenv("SMTP_EMAIL"),
+		password: os.Getenv("SMTP_PASSWORD"),
+	}
+}
 
 // SendEmail sends a raw HTML email via SSL/TLS on port 465
 func SendEmail(to, subject, body string) error {
+	cfg := loadSMTPConfig()
+
 	header := make(map[string]string)
-	header["From"] = "SIGAP JALAN <" + smtpEmail + ">"
+	header["From"] = "SIGAP JALAN <" + cfg.email + ">"
 	header["To"] = to
 	header["Subject"] = subject
 	header["MIME-Version"] = "1.0"
@@ -31,27 +44,27 @@ func SendEmail(to, subject, body string) error {
 
 	tlsConfig := &tls.Config{
 		InsecureSkipVerify: true,
-		ServerName:         smtpHost,
+		ServerName:         cfg.host,
 	}
 
-	conn, err := tls.Dial("tcp", smtpHost+":"+smtpPort, tlsConfig)
+	conn, err := tls.Dial("tcp", cfg.host+":"+cfg.port, tlsConfig)
 	if err != nil {
 		return fmt.Errorf("tls dial failed: %w", err)
 	}
 	defer conn.Close()
 
-	client, err := smtp.NewClient(conn, smtpHost)
+	client, err := smtp.NewClient(conn, cfg.host)
 	if err != nil {
 		return fmt.Errorf("smtp client creation failed: %w", err)
 	}
 	defer client.Quit()
 
-	auth := smtp.PlainAuth("", smtpEmail, smtpPassword, smtpHost)
+	auth := smtp.PlainAuth("", cfg.email, cfg.password, cfg.host)
 	if err = client.Auth(auth); err != nil {
 		return fmt.Errorf("smtp authentication failed: %w", err)
 	}
 
-	if err = client.Mail(smtpEmail); err != nil {
+	if err = client.Mail(cfg.email); err != nil {
 		return fmt.Errorf("smtp mail command failed: %w", err)
 	}
 	if err = client.Rcpt(to); err != nil {
