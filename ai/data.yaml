@@ -1,0 +1,6 @@
+names:
+- pothole
+nc: 1
+test: ./datasets/archive/test/images
+train: ./datasets/archive/train/images
+val: ./datasets/archive/valid/images
