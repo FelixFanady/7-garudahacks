@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { UserPlus, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { UserPlus, Loader2, AlertCircle, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import client from "../../api/client";
 
 export const CreateUserPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState("ME");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -91,15 +92,25 @@ export const CreateUserPage = () => {
             <label className="block text-sm font-medium text-ink">
               Password (min. 6 karakter)
             </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Masukkan password staf"
-              required
-              minLength={6}
-              className="mt-2 h-11 w-full rounded-lg border border-line bg-white px-4 text-sm text-ink outline-none transition focus:border-brand-600 focus:ring-4 focus:ring-brand-100"
-            />
+            <div className="relative mt-2">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Masukkan password staf"
+                required
+                minLength={6}
+                className="h-11 w-full rounded-lg border border-line bg-white px-4 pr-11 text-sm text-ink outline-none transition focus:border-brand-600 focus:ring-4 focus:ring-brand-100"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(v => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-ink transition"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+              </button>
+            </div>
           </div>
 
           <div>

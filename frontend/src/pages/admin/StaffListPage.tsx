@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Users, Search, Loader2, AlertCircle, CheckCircle2, UserX, UserCheck, KeyRound, Trash2, X, User } from "lucide-react";
+import { Users, Search, Loader2, AlertCircle, CheckCircle2, UserX, UserCheck, KeyRound, Trash2, X, User, Eye, EyeOff } from "lucide-react";
 import client from "../../api/client";
 
 interface StaffUser {
@@ -22,6 +22,7 @@ export const StaffListPage = () => {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<StaffUser | null>(null);
   const [newPassword, setNewPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [submittingPassword, setSubmittingPassword] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
@@ -74,6 +75,7 @@ export const StaffListPage = () => {
   const handleChangePasswordClick = (user: StaffUser) => {
     setSelectedUser(user);
     setNewPassword("");
+    setShowNewPassword(false);
     setPasswordError(null);
     setIsPasswordModalOpen(true);
   };
@@ -326,15 +328,25 @@ export const StaffListPage = () => {
 
               <div>
                 <label className="block text-xs font-semibold text-ink">Password Baru (min. 6 karakter)</label>
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Masukkan password baru"
-                  required
-                  minLength={6}
-                  className="mt-2 h-10 w-full rounded-lg border border-line bg-white px-3 text-sm text-ink outline-none transition focus:border-brand-600"
-                />
+                <div className="relative mt-2">
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Masukkan password baru"
+                    required
+                    minLength={6}
+                    className="h-10 w-full rounded-lg border border-line bg-white px-3 pr-10 text-sm text-ink outline-none transition focus:border-brand-600"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(v => !v)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-ink transition"
+                    tabIndex={-1}
+                  >
+                    {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
 
               <div className="flex justify-end gap-2 pt-2">
