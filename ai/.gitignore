@@ -1,4 +1,41 @@
-node_modules/
-dist/
-vite-out.log
-vite-err.log
+# Ignore standard YOLO pre-trained weights
+**/yolo26*.pt
+
+**/archive/test
+**/archive/train
+**/archive/valid
+
+# -----------------------------------------------------
+# YOLO RUNS FOLDER WHITELISTING
+# -----------------------------------------------------
+
+# 1. Ignore everything inside runs/
+runs/*
+
+# 2. But ALLOW Git to enter the detect/ folder
+!runs/detect/
+
+# 3. Ignore everything else inside detect/
+runs/detect/*
+
+# 4. But ALLOW Git to enter the pothole_detection/ folder
+!runs/detect/pothole_detection/
+
+# 5. Ignore everything else inside pothole_detection/
+runs/detect/pothole_detection/*
+
+# 6. But ALLOW Git to enter the fast run folder
+!runs/detect/pothole_detection/yolo26s_fast_run/
+
+# 7. Ignore everything else inside the fast run folder (images, logs, etc.)
+runs/detect/pothole_detection/yolo26s_fast_run/*
+
+# 8. But ALLOW Git to enter the weights folder
+!runs/detect/pothole_detection/yolo26s_fast_run/weights/
+
+# 9. Ignore all other files inside the weights folder
+runs/detect/pothole_detection/yolo26s_fast_run/weights/*
+
+# 10. Explicitly ALLOW the best and last model weight files
+!runs/detect/pothole_detection/yolo26s_fast_run/weights/best.pt
+!runs/detect/pothole_detection/yolo26s_fast_run/weights/last.pt
