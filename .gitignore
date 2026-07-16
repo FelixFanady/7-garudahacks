@@ -1,2 +1,43 @@
-# Ignore YOLO dataset folders
-datasets/
+# AI gitignore
+# Ignore YOLO dataset
+**/datasets/archive/
+**/datasets/archive.zip
+*.jpg
+
+# Ignore standard YOLO pre-trained weights
+**/yolo26*.pt
+
+# -----------------------------------------------------
+# YOLO RUNS FOLDER WHITELISTING
+# -----------------------------------------------------
+
+# 1. Ignore everything inside ai/runs/
+ai/runs/*
+
+# 2. But ALLOW Git to enter the detect/ folder
+!ai/runs/detect/
+
+# 3. Ignore everything else inside detect/
+ai/runs/detect/*
+
+# 4. But ALLOW Git to enter the pothole_detection/ folder
+!ai/runs/detect/pothole_detection/
+
+# 5. Ignore everything else inside pothole_detection/
+ai/runs/detect/pothole_detection/*
+
+# 6. But ALLOW Git to enter the fast run folder
+!ai/runs/detect/pothole_detection/yolo26s_fast_run/
+
+# 7. Ignore everything else inside the fast run folder (images, logs, etc.)
+ai/runs/detect/pothole_detection/yolo26s_fast_run/*
+
+# 8. But ALLOW Git to enter the weights folder
+!ai/runs/detect/pothole_detection/yolo26s_fast_run/weights/
+
+# 9. Ignore all other files inside the weights folder
+ai/runs/detect/pothole_detection/yolo26s_fast_run/weights/*
+
+# 10. Explicitly ALLOW the best and last model weight files
+!ai/runs/detect/pothole_detection/yolo26s_fast_run/weights/best.pt
+!ai/runs/detect/pothole_detection/yolo26s_fast_run/weights/last.pt
