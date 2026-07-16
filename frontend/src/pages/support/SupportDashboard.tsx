@@ -75,63 +75,63 @@ export const SupportDashboard = () => {
       )}
 
       {/* Stats */}
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-xl border border-line bg-white p-5 shadow-sm">
-          <div className="flex items-center gap-4">
-            <span className="grid h-10 w-10 place-items-center rounded-lg bg-slate-50 text-muted">
-              <BarChart2 size={20} />
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="rounded-xl border border-line bg-white p-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-50 text-muted">
+              <BarChart2 size={16} />
             </span>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted">Total Laporan</p>
-              <h3 className="mt-1 text-2xl font-bold text-ink">{totalCount}</h3>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted leading-tight">Total Laporan</p>
+              <h3 className="mt-0.5 text-xl font-bold text-ink">{totalCount}</h3>
             </div>
           </div>
         </div>
 
-        <div className="rounded-xl border border-line bg-white p-5 shadow-sm">
-          <div className="flex items-center gap-4">
-            <span className="grid h-10 w-10 place-items-center rounded-lg bg-amber-50 text-warning">
-              <Clock size={20} />
+        <div className="rounded-xl border border-line bg-white p-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-amber-50 text-warning">
+              <Clock size={16} />
             </span>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted">Menunggu Verifikasi</p>
-              <h3 className="mt-1 text-2xl font-bold text-ink">{pendingCount}</h3>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted leading-tight">Menunggu</p>
+              <h3 className="mt-0.5 text-xl font-bold text-ink">{pendingCount}</h3>
             </div>
           </div>
         </div>
 
-        <div className="rounded-xl border border-line bg-white p-5 shadow-sm">
-          <div className="flex items-center gap-4">
-            <span className="grid h-10 w-10 place-items-center rounded-lg bg-brand-50 text-brand-600">
-              <ShieldAlert size={20} />
+        <div className="rounded-xl border border-line bg-white p-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-600">
+              <ShieldCheck size={16} />
             </span>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted">Dijadwalkan (ME)</p>
-              <h3 className="mt-1 text-2xl font-bold text-ink">{scheduledCount}</h3>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted leading-tight">Dijadwalkan</p>
+              <h3 className="mt-0.5 text-xl font-bold text-ink">{scheduledCount}</h3>
             </div>
           </div>
         </div>
 
-        <div className="rounded-xl border border-line bg-white p-5 shadow-sm">
-          <div className="flex items-center gap-4">
-            <span className="grid h-10 w-10 place-items-center rounded-lg bg-emerald-50 text-success">
-              <CheckCircle2 size={20} />
+        <div className="rounded-xl border border-line bg-white p-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-emerald-50 text-success">
+              <CheckCircle2 size={16} />
             </span>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted">Selesai Diperbaiki</p>
-              <h3 className="mt-1 text-2xl font-bold text-ink">{resolvedCount}</h3>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted leading-tight">Selesai</p>
+              <h3 className="mt-0.5 text-xl font-bold text-ink">{resolvedCount}</h3>
             </div>
           </div>
         </div>
 
-        <div className="rounded-xl border border-red-100 bg-white p-5 shadow-sm">
-          <div className="flex items-center gap-4">
-            <span className="grid h-10 w-10 place-items-center rounded-lg bg-red-50 text-red-500">
-              <ShieldAlert size={20} />
+        <div className="rounded-xl border border-red-100 bg-white p-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-red-50 text-red-500">
+              <ShieldAlert size={16} />
             </span>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted">False Report</p>
-              <h3 className="mt-1 text-2xl font-bold text-ink">{falseReportCount}</h3>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted leading-tight">False Report</p>
+              <h3 className="mt-0.5 text-xl font-bold text-ink">{falseReportCount}</h3>
             </div>
           </div>
         </div>
