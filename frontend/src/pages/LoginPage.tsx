@@ -42,19 +42,11 @@ export const LoginPage = () => {
 
     try {
       const response = await client.post("/login", { email, password });
-      const { token, user } = response.data;
-      
-      login(token, user);
+      const { token: newToken } = response.data;
 
-      if (user.role === "ADMIN") {
-        navigate("/admin");
-      } else if (user.role === "ME") {
-        navigate("/me");
-      } else if (user.role === "SUPPORT") {
-        navigate("/support");
-      } else {
-        navigate("/");
-      }
+      login(newToken);
+
+      // Role-based redirect is handled by the useEffect below (user state update triggers it)
     } catch (err: any) {
       if (err.response && err.response.data && err.response.data.error) {
         // Translation for common errors
