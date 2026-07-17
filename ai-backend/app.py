@@ -6,10 +6,12 @@ import numpy as np
 import supervision as sv
 from ultralytics import YOLO
 from flask import Flask, render_template, Response, jsonify, request
+from flask_cors import CORS
 from werkzeug.utils import secure_filename
 
 # Flask App Initialization
 app = Flask(__name__)
+CORS(app)  # Allow cross-origin requests (Flutter emulator at 10.0.2.2)
 
 # Configuration
 PR_MODEL_PATH = "best.pt"
@@ -185,6 +187,41 @@ def upload_image():
     return jsonify({
         'detections': count,
         'image': f"data:image/jpeg;base64,{img_base64}"
+    })
+
+@app.route('/analyze_frame', methods=['POST'])
+def analyze_frame():
+    """Dedicated endpoint for Flutter dashcam frame analysis.
+    Accepts a JPEG frame from the mobile camera, runs YOLO pothole detection,
+    and returns detection count + annotated image (base64).
+    """
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part', 'detections': 0}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file', 'detections': 0}), 400
+
+    conf = request.form.get('conf', default=0.3, type=float)
+
+    # Decode image bytes from multipart upload
+    file_bytes = np.frombuffer(file.read(), np.uint8)
+    image = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+
+    if image is None:
+        return jsonify({'error': 'Invalid image data', 'detections': 0}), 400
+
+    # Run YOLO detection
+    visualizer = PyResearchVisualizer()
+    annotated_image, count = visualizer.process_frame(image, conf=conf)
+
+    # Encode annotated frame to base64 JPEG
+    _, buffer = cv2.imencode('.jpg', annotated_image, [cv2.IMWRITE_JPEG_QUALITY, 75])
+    img_base64 = base64.b64encode(buffer).decode('utf-8')
+
+    return jsonify({
+        'detections': count,
+        'image': f"data:image/jpeg;base64,{img_base64}",
+        'confidence_threshold': conf
     })
 
 if __name__ == "__main__":
