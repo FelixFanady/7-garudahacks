@@ -290,7 +290,7 @@ export const PublicReportDetailPage = () => {
                   <MapPin size={16} className="text-brand-600" />
                   Lokasi Kerusakan Jalan
                 </h4>
-                <div className="rounded-xl overflow-hidden border border-line h-60 bg-slate-50 relative">
+                <div className="rounded-xl overflow-hidden border border-line h-96 bg-slate-50 relative">
                   <div id="public-detail-map" className="h-full w-full z-10" />
                 </div>
               </div>

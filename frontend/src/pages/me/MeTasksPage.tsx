@@ -525,7 +525,7 @@ const DetailPanel = ({
                 <MapPin size={10} className="text-brand-600" />
                 Peta Lokasi
               </p>
-              <div className="rounded-lg overflow-hidden border border-line h-44 relative">
+              <div className="rounded-lg overflow-hidden border border-line h-72 relative">
                 <div id={`detail-map-${task.uid}`} className="h-full w-full z-10" />
               </div>
             </div>

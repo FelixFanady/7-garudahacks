@@ -639,7 +639,7 @@ export const ReportDetailPage = () => {
               <MapPin size={14} className="text-brand-600" />
               Lokasi Peta Kerusakan
             </h4>
-            <div className="rounded-lg overflow-hidden border border-line h-60 bg-slate-50 relative">
+            <div className="rounded-lg overflow-hidden border border-line h-96 bg-slate-50 relative">
               <div id="detail-map" className="h-full w-full z-10" />
             </div>
           </div>
