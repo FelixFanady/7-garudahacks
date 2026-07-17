@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Loader2, AlertCircle, CheckCircle2, Search, Calendar } from "lucide-react";
+import { Loader2, AlertCircle, CheckCircle2, Search, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { SiteHeader } from "../components/SiteHeader";
 import { SiteFooter } from "../components/SiteFooter";
 import { PublicReportCard } from "../components/PublicReportCard";
 import client from "../api/client";
+import { useSearchParams } from "react-router-dom";
 
 interface Report {
   id: number;
@@ -18,13 +19,23 @@ interface Report {
 }
 
 export const TransparansiPage = () => {
+  const [searchParams] = useSearchParams();
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Search and Filter states
-  const [searchId, setSearchId] = useState("");
+  const [searchId, setSearchId] = useState(searchParams.get("search") || "");
   const [filterDate, setFilterDate] = useState("");
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 9;
+
+  // Reset pagination on filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchId, filterDate]);
 
   const fetchReports = async () => {
     setLoading(true);
@@ -61,6 +72,12 @@ export const TransparansiPage = () => {
 
     return matchesId && matchesDate;
   });
+
+  const totalItems = filteredReports.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentReports = filteredReports.slice(indexOfFirstItem, indexOfLastItem);
 
   return (
     <div className="min-h-screen bg-slate-50/50 flex flex-col font-sans">
@@ -164,10 +181,56 @@ export const TransparansiPage = () => {
             <p className="text-sm font-medium">Tidak ada laporan perbaikan yang cocok dengan kriteria filter.</p>
           </div>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredReports.map((report) => (
-              <PublicReportCard key={report.id} report={report} />
-            ))}
+          <div>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {currentReports.map((report) => (
+                <PublicReportCard key={report.id} report={report} />
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="mt-10 flex flex-col sm:flex-row justify-between items-center gap-4 border-t border-line pt-6">
+                <p className="text-xs text-muted">
+                  Menampilkan <span className="font-semibold text-ink">{indexOfFirstItem + 1}</span>-{indexOfLastItem > totalItems ? totalItems : indexOfLastItem} dari <span className="font-semibold text-ink">{totalItems}</span> laporan
+                </p>
+                
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-white hover:bg-slate-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      type="button"
+                      onClick={() => setCurrentPage(page)}
+                      className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border text-xs font-semibold transition ${
+                        currentPage === page
+                          ? "border-brand-600 bg-brand-600 text-white"
+                          : "border-line bg-white hover:bg-slate-50 text-muted hover:text-ink"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-white hover:bg-slate-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </main>
