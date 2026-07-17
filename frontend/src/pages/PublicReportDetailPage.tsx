@@ -23,6 +23,7 @@ interface Comment {
   message: string;
   photo: string | null;
   is_proof: boolean;
+  is_final_proof?: boolean;
   created_at: string;
   sender: {
     email: string;
