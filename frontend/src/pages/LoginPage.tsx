@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { LockKeyhole, ShieldCheck, Loader2 } from "lucide-react";
+import sigapLogo from "../components/photos/SIGAP Logo.png";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import client from "../api/client";
@@ -67,9 +68,7 @@ export const LoginPage = () => {
   return (
     <main className="grid min-h-screen place-items-center bg-surface px-5 py-10 text-ink">
       <section className="w-full max-w-md rounded-2xl border border-line bg-white p-8 shadow-soft">
-        <div className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-brand-600 text-white">
-          <ShieldCheck size={24} strokeWidth={2.4} />
-        </div>
+        <img src={sigapLogo} alt="SIGAP Logo" className="mx-auto h-12 w-auto object-contain" />
 
         <div className="mt-6 text-center">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-600">

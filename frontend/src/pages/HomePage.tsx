@@ -1,11 +1,40 @@
-import { ArrowRight, BarChart3, CheckCircle2, MapPinned } from "lucide-react";
-import { MaintenanceCard } from "../components/MaintenanceCard";
+import React, { useState, useEffect } from "react";
+import { ArrowRight, BarChart3, CheckCircle2, MapPinned, Loader2 } from "lucide-react";
+import { PublicReportCard } from "../components/PublicReportCard";
 import { MapRoutingPreview } from "../components/MapRoutingPreview";
 import { SiteHeader } from "../components/SiteHeader";
 import { SiteFooter } from "../components/SiteFooter";
-import { maintenanceReports } from "../data/maintenanceReports";
+import client from "../api/client";
 
 export const HomePage = () => {
+  interface Report {
+    id: number;
+    uid: string;
+    location: string;
+    description: string;
+    source: "CITIZEN" | "SYSTEM";
+    status: "MENUNGGU_VERIFIKASI" | "DIJADWALKAN" | "SELESAI";
+    photo: string;
+    scheduled_date: string | null;
+    created_at: string;
+  }
+
+  const [reports, setReports] = useState<Report[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const response = await client.get("/public/reports");
+        setReports(response.data || []);
+      } catch (err) {
+        console.error("Failed to fetch reports for home page:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReports();
+  }, []);
   return (
     <main className="min-h-screen bg-white text-ink">
       <SiteHeader />
@@ -86,9 +115,20 @@ export const HomePage = () => {
           </div>
 
           <div className="grid gap-5 md:grid-cols-3">
-            {maintenanceReports.map((report) => (
-              <MaintenanceCard key={report.id} report={report} />
-            ))}
+            {loading ? (
+              <div className="col-span-3 py-12 flex flex-col items-center justify-center gap-2 text-muted">
+                <Loader2 className="animate-spin text-brand-600" size={28} />
+                <p className="text-sm">Memuat progres perbaikan...</p>
+              </div>
+            ) : reports.length === 0 ? (
+              <div className="col-span-3 text-center py-8 text-muted">
+                Belum ada laporan perbaikan jalan yang aktif.
+              </div>
+            ) : (
+              reports.slice(0, 3).map((report) => (
+                <PublicReportCard key={report.id} report={report} />
+              ))
+            )}
           </div>
 
           <div className="mt-10 flex justify-center">

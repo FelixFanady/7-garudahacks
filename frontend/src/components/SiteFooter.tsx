@@ -1,5 +1,5 @@
 import React from "react";
-import { ShieldCheck } from "lucide-react";
+import sigapLogo from "./photos/SIGAP Logo.png";
 
 export const SiteFooter = () => {
   return (
@@ -8,9 +8,7 @@ export const SiteFooter = () => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-8 border-b border-line">
           {/* Brand Info */}
           <div className="flex items-center gap-3">
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand-600 text-white shrink-0">
-              <ShieldCheck size={18} strokeWidth={2.3} />
-            </span>
+            <img src={sigapLogo} alt="SIGAP Logo" className="h-8 w-auto object-contain shrink-0" />
             <div>
               <span className="text-sm font-bold tracking-[0.15em] text-ink uppercase">SIGAP JALAN</span>
               <p className="text-xs text-muted mt-0.5">Sistem Antisipasi Jalan Berlubang & Progres Perbaikan AI</p>

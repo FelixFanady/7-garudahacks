@@ -1,6 +1,7 @@
 import React from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import sigapLogo from "../photos/SIGAP Logo.png";
 import {
   ShieldCheck,
   LayoutDashboard,
@@ -68,9 +69,7 @@ export const DashboardLayout = () => {
       <aside className="flex w-64 flex-col border-r border-line bg-white">
         {/* Sidebar Header */}
         <div className="flex h-16 items-center gap-3 border-b border-line px-6">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand-600 text-white">
-            <ShieldCheck size={18} strokeWidth={2.3} />
-          </span>
+          <img src={sigapLogo} alt="SIGAP Logo" className="h-8 w-auto object-contain" />
           <span className="text-sm font-bold tracking-[0.15em] text-ink uppercase">
             SIGAP JALAN
           </span>
