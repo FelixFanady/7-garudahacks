@@ -126,13 +126,20 @@ func (h *ReportController) CreateCitizenReport(c *gin.Context) {
 			Group("users.id").
 			Order("COUNT(reports.id) ASC, users.id ASC").
 			Find(&activeMECounts).Error
-
 		if err == nil && len(activeMECounts) > 0 {
 			// Saring ME yang tidak terlalu sibuk (misalnya unfinished_count < 5)
 			const maxTasksThreshold = 5
 			var availableMEs []models.User
 			for _, me := range activeMECounts {
 				if me.UnfinishedCount < maxTasksThreshold {
+					availableMEs = append(availableMEs, me.User)
+				}
+			}
+
+			// Fallback: Jika semua ME sibuk, tetap alokasikan ke ME yang paling sedikit tugasnya
+			if len(availableMEs) == 0 {
+				log.Printf("[AI Integration] Info: Semua staf ME sedang sibuk (tugas >= %d). Memilih ME dengan beban tugas terendah sebagai fallback.", maxTasksThreshold)
+				for _, me := range activeMECounts {
 					availableMEs = append(availableMEs, me.User)
 				}
 			}
@@ -150,7 +157,7 @@ func (h *ReportController) CreateCitizenReport(c *gin.Context) {
 				assignedMEs = availableMEs[:meToAssignCount]
 				reportStatus = models.StatusDijadwalkan
 			} else {
-				log.Printf("[AI Integration] Warning: Semua staf ME sedang sibuk (tugas >= %d). Alihkan ke manual.", maxTasksThreshold)
+				log.Printf("[AI Integration] Warning: Tidak ada staf ME yang dapat ditugaskan. Alihkan ke manual.")
 				isAutoVerified = false
 			}
 		} else {
@@ -257,29 +264,108 @@ func (h *ReportController) CreateSystemReportPath(c *gin.Context) {
 	}
 
 	// Analisis gambar menggunakan AI microservice
+	var assignedMEs []models.User
+	isAutoVerified := false
+	scheduledDate := time.Now().AddDate(0, 1, 0) // 1 bulan dari sekarang
+	var reportStatus models.ReportStatus = models.StatusMenunggu
 	isFalseReport := false
+
 	detectionsCount, annotatedBytes, err := h.CallAIBackend(photoBytes)
 	if err != nil {
 		log.Printf("[AI Integration] Warning: Gagal menghubungi AI Backend: %v", err)
 	} else {
 		log.Printf("[AI Integration] Success: Terdeteksi %d lubang pada laporan sistem", detectionsCount)
 		photoBytes = annotatedBytes
-		description = fmt.Sprintf("[AI Detection: %d lubang terdeteksi]\n%s", detectionsCount, description)
-		if detectionsCount == 0 {
+		if detectionsCount > 0 {
+			description = fmt.Sprintf("[AI Auto-Verified: %d lubang terdeteksi]\n%s", detectionsCount, description)
+			isAutoVerified = true
+
+			// Query ME yang aktif (tidak diblokir) dan urutkan berdasarkan jumlah tugas yang belum selesai (status != SELESAI)
+			type MEWithCount struct {
+				models.User
+				UnfinishedCount int `gorm:"column:unfinished_count"`
+			}
+			var activeMECounts []MEWithCount
+
+			err := h.db.Model(&models.User{}).
+				Select("users.*, COUNT(reports.id) as unfinished_count").
+				Joins("LEFT JOIN report_assigned_me ON report_assigned_me.user_id = users.id").
+				Joins("LEFT JOIN reports ON reports.id = report_assigned_me.report_id AND reports.status != ?", models.StatusSelesai).
+				Where("users.role = ? AND users.is_banned = ?", models.RoleME, false).
+				Group("users.id").
+				Order("COUNT(reports.id) ASC, users.id ASC").
+				Find(&activeMECounts).Error
+
+			if err == nil && len(activeMECounts) > 0 {
+				// Saring ME yang tidak terlalu sibuk (misalnya unfinished_count < 5)
+				const maxTasksThreshold = 5
+				var availableMEs []models.User
+				for _, me := range activeMECounts {
+					if me.UnfinishedCount < maxTasksThreshold {
+						availableMEs = append(availableMEs, me.User)
+					}
+				}
+
+				// Fallback: Jika semua ME sibuk, tetap alokasikan ke ME yang paling sedikit tugasnya
+				if len(availableMEs) == 0 {
+					log.Printf("[AI Integration] Info: Semua staf ME sedang sibuk (tugas >= %d). Memilih ME dengan beban tugas terendah sebagai fallback.", maxTasksThreshold)
+					for _, me := range activeMECounts {
+						availableMEs = append(availableMEs, me.User)
+					}
+				}
+
+				if len(availableMEs) > 0 {
+					// Tentukan jumlah ME yang dialokasikan berdasarkan keparahan
+					meToAssignCount := 1
+					if detectionsCount >= 3 {
+						// Jika parah (>= 3 lubang), alokasikan 3 ME jika slot tersedia
+						meToAssignCount = 3
+						if len(availableMEs) < 3 {
+							meToAssignCount = len(availableMEs)
+						}
+					}
+					assignedMEs = availableMEs[:meToAssignCount]
+					reportStatus = models.StatusDijadwalkan
+				} else {
+					log.Printf("[AI Integration] Warning: Tidak ada staf ME yang dapat ditugaskan. Alihkan ke manual.")
+					isAutoVerified = false
+				}
+			} else {
+				log.Printf("[AI Integration] Warning: Gagal query staf ME atau tidak ada staf ME aktif. Alihkan ke manual: %v", err)
+				isAutoVerified = false
+			}
+		} else {
 			isFalseReport = true
+			description = fmt.Sprintf("[AI Detection: 0 lubang terdeteksi]\n%s", description)
 		}
 	}
 
-	report := models.Report{
-		UID:           generateReportUID(h.db),
-		Location:      location,
-		Latitude:      latitude,
-		Longitude:     longitude,
-		Description:   description,
-		Photo:         photoBytes,
-		Source:        models.SourceSystem,
-		Status:        models.StatusMenunggu,
-		IsFalseReport: isFalseReport,
+	var report models.Report
+	if isAutoVerified {
+		report = models.Report{
+			UID:           generateReportUID(h.db),
+			Location:      location,
+			Latitude:      latitude,
+			Longitude:     longitude,
+			Description:   description,
+			Photo:         photoBytes,
+			Source:        models.SourceSystem,
+			Status:        reportStatus,
+			ScheduledDate: &scheduledDate,
+			IsFalseReport: false,
+		}
+	} else {
+		report = models.Report{
+			UID:           generateReportUID(h.db),
+			Location:      location,
+			Latitude:      latitude,
+			Longitude:     longitude,
+			Description:   description,
+			Photo:         photoBytes,
+			Source:        models.SourceSystem,
+			Status:        reportStatus,
+			IsFalseReport: isFalseReport,
+		}
 	}
 
 	if err := h.db.Create(&report).Error; err != nil {
@@ -287,9 +373,34 @@ func (h *ReportController) CreateSystemReportPath(c *gin.Context) {
 		return
 	}
 
+	// Jika auto-verified dan ada ME yang ditugaskan, hubungkan many-to-many
+	if isAutoVerified && len(assignedMEs) > 0 {
+		if err := h.db.Model(&report).Association("AssignedME").Replace(&assignedMEs); err != nil {
+			log.Printf("[AI Integration] Warning: Gagal mengaitkan ME untuk laporan sistem: %v", err)
+		}
+	}
+
+	var responseMessage string
+	if isAutoVerified {
+		meNames := []string{}
+		for _, me := range assignedMEs {
+			meNames = append(meNames, me.Email)
+		}
+		meListStr := "tidak ada ME tersedia"
+		if len(meNames) > 0 {
+			meListStr = strings.Join(meNames, ", ")
+		}
+		responseMessage = fmt.Sprintf("Laporan sistem terverifikasi otomatis oleh AI karena terdeteksi %d lubang! Perbaikan telah dijadwalkan dengan tenggat waktu 1 bulan (ME ditugaskan: %s).", detectionsCount, meListStr)
+	} else if isFalseReport {
+		responseMessage = "Laporan sistem terdeteksi sebagai laporan palsu (0 lubang terdeteksi)."
+	} else {
+		responseMessage = "Laporan sistem berhasil diterima dan akan diverifikasi secara manual oleh tim Support."
+	}
+
 	c.JSON(http.StatusCreated, gin.H{
-		"message": "laporan sistem berhasil diterima",
+		"message": responseMessage,
 		"id":      report.ID,
+		"uid":     report.UID,
 	})
 }
 

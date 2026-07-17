@@ -50,7 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       debugPrint('Connection to backend failed, trying mock login: $e');
       // Fallback to local mock validation if backend server is offline
-      if (_emailController.text == 'driver@sigapjalan.id' && _passwordController.text == 'password123') {
+      if (_emailController.text == 'support@sigapjalan.id' && _passwordController.text == 'password123') {
         widget.onLoginSuccess();
       } else {
         setState(() {
