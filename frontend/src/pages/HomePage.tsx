@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { ArrowRight, BarChart3, CheckCircle2, MapPinned, Loader2, Camera, HardHat, Search } from "lucide-react";
+import {
+  ArrowRight,
+  BarChart3,
+  CheckCircle2,
+  MapPinned,
+  Loader2,
+  Camera,
+  HardHat,
+  Search,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PublicReportCard } from "../components/PublicReportCard";
 import { MapRoutingPreview } from "../components/MapRoutingPreview";
@@ -28,7 +37,9 @@ export const HomePage = () => {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/laporan/transparansi?search=${encodeURIComponent(searchQuery.trim())}`);
+      navigate(
+        `/laporan/transparansi?search=${encodeURIComponent(searchQuery.trim())}`,
+      );
     }
   };
 
@@ -60,15 +71,21 @@ export const HomePage = () => {
             SIGAP JALAN
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-muted">
-            Sistem Antisipasi Jalan Berlubang yang membantu masyarakat memilih rute
-            lebih aman, melihat laporan kerusakan, dan memantau progres perbaikan
-            secara terbuka.
+            Sistem Antisipasi Jalan Berlubang yang membantu masyarakat memilih
+            rute lebih aman, melihat laporan kerusakan, dan memantau progres
+            perbaikan secara terbuka.
           </p>
-          
+
           {/* Search Bar */}
-          <form onSubmit={handleSearchSubmit} className="mt-8 max-w-md relative">
+          <form
+            onSubmit={handleSearchSubmit}
+            className="mt-8 max-w-md relative"
+          >
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted" size={18} />
+              <Search
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-muted"
+                size={18}
+              />
               <input
                 type="text"
                 placeholder="Cari ID laporan (e.g. ID-Lapor)..."
@@ -87,48 +104,75 @@ export const HomePage = () => {
 
           {/* Quick Actions Menu (Inspired by Banyuwangi-style circular icons grid) */}
           <div className="mt-10 pt-6 border-t border-line/80">
-            <p className="text-xs font-bold uppercase tracking-wider text-muted mb-4">Akses Layanan</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-muted mb-4">
+              Akses Layanan
+            </p>
             <div className="flex flex-wrap gap-6 sm:gap-8">
-              <a href="/lapor" className="flex flex-col items-center gap-2 group text-center w-20">
+              <a
+                href="/lapor"
+                className="flex flex-col items-center gap-2 group text-center w-20"
+              >
                 <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 shadow-sm border border-brand-100/50 transition duration-300 group-hover:scale-105 group-hover:shadow-md group-hover:bg-brand-600 group-hover:text-white">
                   <Camera size={20} />
                 </span>
-                <span className="text-[11px] font-semibold text-ink group-hover:text-brand-600 transition">Laporkan</span>
+                <span className="text-[11px] font-semibold text-ink group-hover:text-brand-600 transition">
+                  Laporkan
+                </span>
               </a>
-              <a href="/laporan/transparansi" className="flex flex-col items-center gap-2 group text-center w-20">
+              <a
+                href="/laporan/transparansi"
+                className="flex flex-col items-center gap-2 group text-center w-20"
+              >
                 <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-warning shadow-sm border border-amber-100/50 transition duration-300 group-hover:scale-105 group-hover:shadow-md group-hover:bg-brand-600 group-hover:text-white">
                   <BarChart3 size={20} />
                 </span>
-                <span className="text-[11px] font-semibold text-ink group-hover:text-warning transition">Transparansi</span>
+                <span className="text-[11px] font-semibold text-ink group-hover:text-warning transition">
+                  Transparansi
+                </span>
               </a>
-              <a href="#rute" className="flex flex-col items-center gap-2 group text-center w-20">
+              <a
+                href="#rute"
+                className="flex flex-col items-center gap-2 group text-center w-20"
+              >
                 <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-success shadow-sm border border-emerald-100/50 transition duration-300 group-hover:scale-105 group-hover:shadow-md group-hover:bg-brand-600 group-hover:text-white">
                   <MapPinned size={20} />
                 </span>
-                <span className="text-[11px] font-semibold text-ink group-hover:text-success transition">Rute Aman</span>
+                <span className="text-[11px] font-semibold text-ink group-hover:text-success transition">
+                  Rute Aman
+                </span>
               </a>
-              <a href="/login" className="flex flex-col items-center gap-2 group text-center w-20">
+              <a
+                href="/login"
+                className="flex flex-col items-center gap-2 group text-center w-20"
+              >
                 <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-muted shadow-sm border border-line transition duration-300 group-hover:scale-105 group-hover:shadow-md group-hover:bg-brand-600 group-hover:text-white">
                   <HardHat size={20} />
                 </span>
-                <span className="text-[11px] font-semibold text-ink group-hover:text-muted transition">Portal Staf</span>
+                <span className="text-[11px] font-semibold text-ink group-hover:text-muted transition">
+                  Portal Staf
+                </span>
               </a>
             </div>
           </div>
         </div>
 
-
         <div className="relative min-h-[420px] overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
           <div className="absolute inset-0 [background-image:linear-gradient(90deg,rgba(102,112,133,0.13)_1px,transparent_1px),linear-gradient(rgba(102,112,133,0.13)_1px,transparent_1px)] [background-size:56px_56px]" />
           <div className="absolute left-8 top-8 rounded-xl bg-white p-4 shadow-soft">
             <MapPinned className="text-brand-600" size={28} />
-            <p className="mt-3 text-sm font-semibold text-ink">Deteksi titik risiko</p>
-            <p className="mt-1 text-xs text-muted">Koordinat, status, dan prioritas.</p>
+            <p className="mt-3 text-sm font-semibold text-ink">
+              Deteksi titik risiko
+            </p>
+            <p className="mt-1 text-xs text-muted">
+              Koordinat, status, dan prioritas.
+            </p>
           </div>
           <div className="absolute bottom-8 right-8 w-64 rounded-xl bg-white p-5 shadow-soft">
             <BarChart3 className="text-success" size={26} />
             <p className="mt-3 text-3xl font-semibold text-ink">87%</p>
-            <p className="mt-1 text-sm text-muted">laporan prioritas telah diverifikasi ME.</p>
+            <p className="mt-1 text-sm text-muted">
+              laporan prioritas telah diverifikasi ME.
+            </p>
           </div>
           <div className="absolute left-[24%] top-[48%] h-3 w-[56%] -rotate-12 rounded-full bg-brand-600/25" />
           <div className="absolute left-[18%] top-[64%] h-3 w-[48%] rotate-6 rounded-full bg-emerald-500/25" />
@@ -144,15 +188,14 @@ export const HomePage = () => {
           <div className="mb-9 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div className="max-w-2xl">
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-600">
-                Transparansi ME
+                Transparansi Perbaikan Jalan
               </p>
               <h2 className="mt-3 text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
                 Progres laporan perbaikan yang bisa dipantau publik.
               </h2>
             </div>
             <p className="max-w-md text-sm leading-6 text-muted">
-              Data dummy berikut menggambarkan alur laporan dari validasi lapangan,
-              pengerjaan, hingga bukti selesai.
+              Pantau progres perbaikan jalan di wilayah Anda.
             </p>
           </div>
 
@@ -167,9 +210,11 @@ export const HomePage = () => {
                 Belum ada laporan perbaikan jalan yang aktif.
               </div>
             ) : (
-              reports.slice(0, 3).map((report) => (
-                <PublicReportCard key={report.id} report={report} />
-              ))
+              reports
+                .slice(0, 3)
+                .map((report) => (
+                  <PublicReportCard key={report.id} report={report} />
+                ))
             )}
           </div>
 
