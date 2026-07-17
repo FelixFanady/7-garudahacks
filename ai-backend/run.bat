@@ -11,5 +11,5 @@ if not exist .venv (
 )
 echo Activating virtual environment and starting server...
 call .venv\Scripts\activate
-python app.py
+python -u app.py
 pause
