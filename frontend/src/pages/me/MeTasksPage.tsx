@@ -36,6 +36,7 @@ import client from "../../api/client";
 import { useToast } from "../../context/ToastContext";
 import { useAuth } from "../../context/AuthContext";
 import { ImageModal } from "../../components/ImageModal";
+import { ConfirmModal } from "../../components/ConfirmModal";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 interface Report {
@@ -182,6 +183,7 @@ const DetailPanel = ({
   const [sendingChat, setSendingChat] = useState(false);
   const [isProof, setIsProof] = useState(false);
   const [completeLoading, setCompleteLoading] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
@@ -351,7 +353,7 @@ const DetailPanel = ({
   };
 
   const handleCompleteTask = async () => {
-    if (!window.confirm("Tandai tugas ini sebagai selesai?")) return;
+    setShowConfirmModal(false);
     setCompleteLoading(true);
     const lid = toast.showLoading("Menyelesaikan tugas...");
     try {
@@ -523,7 +525,7 @@ const DetailPanel = ({
                 <MapPin size={10} className="text-brand-600" />
                 Peta Lokasi
               </p>
-              <div className="rounded-lg overflow-hidden border border-line h-44 relative">
+              <div className="rounded-lg overflow-hidden border border-line h-72 relative">
                 <div id={`detail-map-${task.uid}`} className="h-full w-full z-10" />
               </div>
             </div>
@@ -531,18 +533,25 @@ const DetailPanel = ({
 
           {/* Complete Button */}
           {showCompleteBtn && (
-            <button
-              onClick={handleCompleteTask}
-              disabled={completeLoading}
-              className="w-full h-10 inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 text-sm font-semibold text-white hover:bg-emerald-700 transition disabled:opacity-50 shadow-sm"
-            >
-              {completeLoading ? (
-                <Loader2 size={15} className="animate-spin" />
-              ) : (
-                <Check size={15} />
+            <div className="space-y-1.5 w-full">
+              <button
+                onClick={() => setShowConfirmModal(true)}
+                disabled={completeLoading || !comments.some(c => c.is_final_proof)}
+                className="w-full h-10 inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 text-sm font-semibold text-white hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              >
+                {completeLoading ? (
+                  <Loader2 size={15} className="animate-spin" />
+                ) : (
+                  <Check size={15} />
+                )}
+                Tandai Sebagai Selesai
+              </button>
+              {!comments.some(c => c.is_final_proof) && (
+                <p className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200/50 rounded-lg p-2.5 leading-relaxed">
+                  <strong>Peringatan:</strong> Tombol ini dinonaktifkan karena belum ada bukti penyelesaian. Silakan unggah foto di chat, lalu klik kanan foto tersebut dan pilih <strong>"Jadikan Bukti Final"</strong> terlebih dahulu.
+                </p>
               )}
-              Tandai Sebagai Selesai
-            </button>
+            </div>
           )}
         </div>
 
@@ -651,17 +660,7 @@ const DetailPanel = ({
               </div>
             )}
 
-            {user?.role === "ME" && report.status !== "SELESAI" && (
-              <label className="flex items-center gap-2 text-[11px] font-semibold text-ink cursor-pointer select-none w-fit">
-                <input
-                  type="checkbox"
-                  checked={isProof}
-                  onChange={(e) => setIsProof(e.target.checked)}
-                  className="h-3.5 w-3.5 rounded border-line text-brand-600"
-                />
-                <span>Jadikan sebagai bukti penyelesaian</span>
-              </label>
-            )}
+            {/* Checkbox removed since proof is set via right click on existing comments/photos */}
 
             <form onSubmit={handleSendChat} className="flex gap-2 items-center">
               <input
@@ -724,6 +723,17 @@ const DetailPanel = ({
           </button>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        title="Konfirmasi Penyelesaian Tugas"
+        message="Pastikan Anda telah mengunggah foto bukti pelaksanaan pekerjaan di kolom chat sebelum menyelesaikan tugas."
+        confirmText="Ya, Selesai"
+        cancelText="Batal"
+        type="success"
+        onConfirm={handleCompleteTask}
+        onCancel={() => setShowConfirmModal(false)}
+      />
 
       <ImageModal
         isOpen={activePhoto !== null}

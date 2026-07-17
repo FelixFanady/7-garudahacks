@@ -4,12 +4,13 @@ import {
   ArrowLeft, Calendar, User, HardHat, Clock, Check, 
   Send, Image, Loader2, AlertCircle, CheckCircle2, MapPin, 
   MessageSquare, Camera, X, CheckSquare, ChevronLeft, ChevronRight, ChevronDown, Pencil,
-  ShieldAlert, ShieldCheck
+  ShieldAlert, ShieldCheck, XCircle
 } from "lucide-react";
 import client from "../../api/client";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import { ImageModal } from "../../components/ImageModal";
+import { ConfirmModal } from "../../components/ConfirmModal";
 
 interface MEStaff {
   id: number;
@@ -224,9 +225,15 @@ export const ReportDetailPage = () => {
 
   // ME task completion state
   const [completeLoading, setCompleteLoading] = useState(false);
+  const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
 
   // False report toggle state
   const [falseReportLoading, setFalseReportLoading] = useState(false);
+  const [showFalseReportConfirm, setShowFalseReportConfirm] = useState(false);
+
+  // Cancel schedule state
+  const [cancelScheduleLoading, setCancelScheduleLoading] = useState(false);
+  const [showCancelScheduleConfirm, setShowCancelScheduleConfirm] = useState(false);
 
   // Chat message states
   const [chatMessage, setChatMessage] = useState("");
@@ -348,12 +355,7 @@ export const ReportDetailPage = () => {
   };
 
   const handleToggleFalseReport = async () => {
-    const isFalse = report?.is_false_report;
-    const confirmMsg = isFalse
-      ? "Pulihkan laporan ini agar tampil kembali di transparansi publik?"
-      : "Tandai laporan ini sebagai laporan palsu? Laporan akan disembunyikan dari publik.";
-    if (!window.confirm(confirmMsg)) return;
-
+    setShowFalseReportConfirm(false);
     setFalseReportLoading(true);
     const loadingId = toast.showLoading("Memperbarui status laporan...");
     try {
@@ -371,11 +373,28 @@ export const ReportDetailPage = () => {
     }
   };
 
-  const handleCompleteTask = async () => {
-    if (!window.confirm("Apakah Anda yakin telah menyelesaikan perbaikan jalan berlubang ini?")) {
-      return;
+  const handleCancelSchedule = async () => {
+    setShowCancelScheduleConfirm(false);
+    setCancelScheduleLoading(true);
+    const loadingId = toast.showLoading("Membatalkan penugasan ME...");
+    try {
+      const response = await client.put(`/support/reports/${id}/cancel-schedule`);
+      setReport(response.data.report);
+      toast.dismiss(loadingId);
+      toast.showSuccess(response.data.message || "Penugasan ME berhasil dibatalkan.");
+      fetchDetails();
+    } catch (err: any) {
+      toast.dismiss(loadingId);
+      if (err?.response?.status !== 401) {
+        toast.showError(err.response?.data?.error || "Gagal membatalkan penugasan ME.");
+      }
+    } finally {
+      setCancelScheduleLoading(false);
     }
+  };
 
+  const handleCompleteTask = async () => {
+    setShowCompleteConfirm(false);
     setCompleteLoading(true);
     const loadingId = toast.showLoading("Menyelesaikan tugas...");
     try {
@@ -620,7 +639,7 @@ export const ReportDetailPage = () => {
               <MapPin size={14} className="text-brand-600" />
               Lokasi Peta Kerusakan
             </h4>
-            <div className="rounded-lg overflow-hidden border border-line h-60 bg-slate-50 relative">
+            <div className="rounded-lg overflow-hidden border border-line h-96 bg-slate-50 relative">
               <div id="detail-map" className="h-full w-full z-10" />
             </div>
           </div>
@@ -723,17 +742,7 @@ export const ReportDetailPage = () => {
 
         {/* Chat Input Bar */}
         <div className="border-t border-line p-4 bg-white flex flex-col gap-2">
-          {user?.role === "ME" && report.status !== "SELESAI" && (
-            <label className="flex items-center gap-2 text-xs font-semibold text-ink cursor-pointer w-fit select-none">
-              <input
-                type="checkbox"
-                checked={isProof}
-                onChange={(e) => setIsProof(e.target.checked)}
-                className="h-4 w-4 rounded border-line text-brand-600 focus:ring-brand-100"
-              />
-              <span>Jadikan chat & foto ini sebagai bukti penyelesaian tugas perbaikan</span>
-            </label>
-          )}
+          {/* Checkbox removed since proof is set via right click on existing comments/photos */}
           <form onSubmit={handleSendChat} className="flex gap-2 items-center w-full">
             <input
               type="file"
@@ -876,6 +885,19 @@ export const ReportDetailPage = () => {
                         <Clock size={12} />
                         <span>Dijadwalkan pada: {new Date(report.updated_at).toLocaleString("id-ID", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
                       </div>
+
+                      {report.is_false_report && report.assigned_me && report.assigned_me.length > 0 && (
+                        <div className="border-t border-line pt-3">
+                          <button
+                            type="button"
+                            onClick={() => setShowCancelScheduleConfirm(true)}
+                            className="w-full inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-red-50 text-xs font-semibold text-red-700 hover:bg-red-100 transition"
+                          >
+                            <XCircle size={14} />
+                            Batal Penugasan ME
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -1095,13 +1117,19 @@ export const ReportDetailPage = () => {
                 </div>
 
                 <button
-                  onClick={handleCompleteTask}
-                  disabled={completeLoading}
-                  className="h-11 w-full inline-flex items-center justify-center gap-2 rounded-lg bg-success text-sm font-semibold text-white hover:bg-emerald-700 transition disabled:opacity-50"
+                  onClick={() => setShowCompleteConfirm(true)}
+                  disabled={completeLoading || !comments.some(c => c.is_final_proof)}
+                  className="h-11 w-full inline-flex items-center justify-center gap-2 rounded-lg bg-success text-sm font-semibold text-white hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {completeLoading ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
                   Tandai Sebagai Selesai
                 </button>
+
+                {!comments.some(c => c.is_final_proof) && (
+                  <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200/50 rounded-lg p-3 leading-relaxed">
+                    <strong>Peringatan:</strong> Tombol ini dinonaktifkan karena belum ada bukti penyelesaian. Silakan unggah foto di chat, lalu klik kanan foto tersebut dan pilih <strong>"Jadikan Bukti Final"</strong> terlebih dahulu.
+                  </p>
+                )}
               </div>
             )}
 
@@ -1132,7 +1160,7 @@ export const ReportDetailPage = () => {
                   }
                 </p>
                 <button
-                  onClick={handleToggleFalseReport}
+                  onClick={() => setShowFalseReportConfirm(true)}
                   disabled={falseReportLoading}
                   className={`h-10 w-full inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold text-white transition disabled:opacity-50 ${
                     report.is_false_report
@@ -1186,6 +1214,43 @@ export const ReportDetailPage = () => {
           </button>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={showCompleteConfirm}
+        title="Konfirmasi Penyelesaian Tugas"
+        message="Pastikan Anda telah mengunggah foto bukti pelaksanaan pekerjaan di kolom chat sebelum menyelesaikan tugas."
+        confirmText="Ya, Selesai"
+        cancelText="Batal"
+        type="success"
+        onConfirm={handleCompleteTask}
+        onCancel={() => setShowCompleteConfirm(false)}
+      />
+
+      <ConfirmModal
+        isOpen={showFalseReportConfirm}
+        title={report?.is_false_report ? "Pulihkan Laporan" : "Moderasi Laporan Palsu"}
+        message={
+          report?.is_false_report
+            ? "Apakah Anda yakin ingin memulihkan laporan ini agar tampil kembali di transparansi publik?"
+            : "Apakah Anda yakin ingin menandai laporan ini sebagai laporan palsu? Laporan akan disembunyikan dari publik."
+        }
+        confirmText="Ya, Lanjutkan"
+        cancelText="Batal"
+        type={report?.is_false_report ? "info" : "danger"}
+        onConfirm={handleToggleFalseReport}
+        onCancel={() => setShowFalseReportConfirm(false)}
+      />
+
+      <ConfirmModal
+        isOpen={showCancelScheduleConfirm}
+        title="Batal Penugasan ME"
+        message="Apakah Anda yakin ingin membatalkan penugasan ME untuk laporan ini? Status laporan akan kembali menjadi Menunggu Verifikasi."
+        confirmText="Ya, Batal"
+        cancelText="Kembali"
+        type="danger"
+        onConfirm={handleCancelSchedule}
+        onCancel={() => setShowCancelScheduleConfirm(false)}
+      />
 
       <ImageModal
         isOpen={activePhoto !== null}

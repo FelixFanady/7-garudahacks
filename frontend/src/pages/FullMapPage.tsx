@@ -525,7 +525,7 @@ export const FullMapPage = () => {
           <h4 class="text-xs font-semibold text-ink leading-tight mb-1">${p.location}</h4>
           <p class="text-[10px] text-muted leading-relaxed">${p.description}</p>
           ${photoHtml}
-          <a href="/laporan/transparansi/${p.uid}" class="mt-2.5 block text-center text-[10px] font-semibold text-white bg-brand-600 hover:bg-brand-700 py-1.5 rounded transition">
+          <a href="/laporan/transparansi/${p.uid}" class="mt-2.5 block text-center text-[10px] font-semibold text-white bg-brand-600 hover:bg-brand-700 py-1.5 rounded transition" style="color: white !important;">
             Lihat Detail Laporan
           </a>
         </div>
