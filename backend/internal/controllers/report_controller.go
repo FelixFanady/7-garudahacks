@@ -493,6 +493,57 @@ func (h *ReportController) ScheduleReport(c *gin.Context) {
 	})
 }
 
+// CancelScheduleReport cancels the schedule and ME assignment for a report marked as false report
+func (h *ReportController) CancelScheduleReport(c *gin.Context) {
+	reportUIDOrID := c.Param("id")
+
+	var report models.Report
+	query := h.db.Preload("AssignedME")
+	if idVal, err := strconv.Atoi(reportUIDOrID); err == nil {
+		query = query.Where("uid = ? OR id = ?", reportUIDOrID, idVal)
+	} else {
+		query = query.Where("uid = ?", reportUIDOrID)
+	}
+
+	if err := query.First(&report).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "laporan tidak ditemukan"})
+		return
+	}
+
+	if !report.IsFalseReport {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "penugasan hanya dapat dibatalkan jika laporan ditandai sebagai laporan palsu (false report)"})
+		return
+	}
+
+	oldStatus := report.Status
+	report.Status = models.StatusMenunggu
+	report.ScheduledDate = nil
+
+	if err := h.db.Save(&report).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "gagal membatalkan jadwal perbaikan"})
+		return
+	}
+
+	if err := h.db.Model(&report).Association("AssignedME").Clear(); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "gagal menghapus penugasan ME"})
+		return
+	}
+
+	// Fetch updated report
+	h.db.Preload("AssignedME").First(&report, report.ID)
+
+	// Trigger status update email if source is citizen and email is provided
+	if report.Source == models.SourceCitizen && report.ReporterEmail != "" {
+		utils.SendUpdateEmail(report.ReporterEmail, report.ReporterName, report.Location, string(oldStatus), string(models.StatusMenunggu))
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "penugasan ME berhasil dibatalkan",
+		"report":  report,
+	})
+}
+
+
 // ListMESkills returns all active ME staff members for the dropdown
 func (h *ReportController) ListMESkills(c *gin.Context) {
 	var users []models.User
@@ -738,6 +789,32 @@ func (h *ReportController) SetCommentFinalProof(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "gagal memperbarui komentar lain"})
 			return
 		}
+
+		// Update report status to SELESAI
+		oldStatus := report.Status
+		report.Status = models.StatusSelesai
+		if err := tx.Save(&report).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "gagal mengupdate status laporan"})
+			return
+		}
+
+		if report.Source == models.SourceCitizen && report.ReporterEmail != "" {
+			utils.SendUpdateEmail(report.ReporterEmail, report.ReporterName, report.Location, string(oldStatus), string(models.StatusSelesai))
+		}
+	} else {
+		// Revert report status to DIJADWALKAN
+		oldStatus := report.Status
+		report.Status = models.StatusDijadwalkan
+		if err := tx.Save(&report).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "gagal mengupdate status laporan"})
+			return
+		}
+
+		if report.Source == models.SourceCitizen && report.ReporterEmail != "" {
+			utils.SendUpdateEmail(report.ReporterEmail, report.ReporterName, report.Location, string(oldStatus), string(models.StatusDijadwalkan))
+		}
 	}
 
 	if err := tx.Model(&comment).Update("is_final_proof", newStatus).Error; err != nil {
@@ -862,3 +939,56 @@ func (h *ReportController) CallAIBackend(photoBytes []byte) (int, []byte, error)
 
 	return aiResp.Detections, decodedImageBytes, nil
 }
+
+// GetPublicStats returns reports and user statistics
+func (h *ReportController) GetPublicStats(c *gin.Context) {
+	var totalReports int64
+	var workAreasCount int64
+	var fieldStaffCount int64
+	var armadaTeamsCount int64
+	var completedRoadsCount int64
+
+	// 1. Total reports (not false reports)
+	if err := h.db.Model(&models.Report{}).Where("is_false_report = ?", false).Count(&totalReports).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "gagal memuat statistik total laporan"})
+		return
+	}
+
+	// 2. Work areas count (distinct locations from reports where not false reports)
+	if err := h.db.Model(&models.Report{}).Where("is_false_report = ?", false).Distinct("location").Count(&workAreasCount).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "gagal memuat statistik wilayah kerja"})
+		return
+	}
+
+	// 3. Field staff count (active ME users)
+	if err := h.db.Model(&models.User{}).Where("role = ? AND is_banned = ?", models.RoleME, false).Count(&fieldStaffCount).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "gagal memuat statistik staf lapangan"})
+		return
+	}
+
+	// 4. Armada teams count (active ME users currently assigned to at least one scheduled/waiting report)
+	// We can find this by querying the report_assigned_me table for unique user_ids that are assigned to reports where is_false_report = false
+	if err := h.db.Table("report_assigned_me").
+		Joins("JOIN reports ON reports.id = report_assigned_me.report_id").
+		Where("reports.is_false_report = ?", false).
+		Distinct("report_assigned_me.user_id").
+		Count(&armadaTeamsCount).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "gagal memuat statistik tim armada"})
+		return
+	}
+
+	// 5. Completed roads count (reports with status finished and not false report)
+	if err := h.db.Model(&models.Report{}).Where("status = ? AND is_false_report = ?", models.StatusSelesai, false).Count(&completedRoadsCount).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "gagal memuat statistik jalan selesai"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"total_reports":   totalReports,
+		"work_areas":      workAreasCount,
+		"field_staff":     fieldStaffCount,
+		"armada_teams":    armadaTeamsCount,
+		"completed_roads": completedRoadsCount,
+	})
+}
+

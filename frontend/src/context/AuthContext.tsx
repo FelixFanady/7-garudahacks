@@ -41,7 +41,7 @@ function decodeJwtPayload(token: string): User | null {
     const payload = JSON.parse(json);
     // Expect claims: id (or sub), email, role
     return {
-      id: payload.id ?? payload.sub,
+      id: payload.user_id ?? payload.id ?? payload.sub,
       email: payload.email,
       role: payload.role,
     };

@@ -31,6 +31,7 @@ func Setup(db *gorm.DB, cfg config.Config) *gin.Engine {
 	router.POST("/system/lapor", reportController.CreateSystemReportPath)
 	router.GET("/public/reports", reportController.ListPublicReports)
 	router.GET("/public/reports/:id", reportController.GetPublicReportDetails)
+	router.GET("/public/stats", reportController.GetPublicStats)
 
 	// Admin Only Routes
 	admin := router.Group("/admin")
@@ -55,6 +56,7 @@ func Setup(db *gorm.DB, cfg config.Config) *gin.Engine {
 		{
 			supportGroup.GET("/reports", reportController.ListAllReports)
 			supportGroup.PUT("/reports/:id/schedule", reportController.ScheduleReport)
+			supportGroup.PUT("/reports/:id/cancel-schedule", reportController.CancelScheduleReport)
 			supportGroup.PUT("/reports/:id/false-report", reportController.ToggleFalseReport)
 			supportGroup.GET("/me-staff", reportController.ListMESkills)
 		}
