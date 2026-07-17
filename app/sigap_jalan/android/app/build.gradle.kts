@@ -42,3 +42,24 @@ android {
 flutter {
     source = "../.."
 }
+
+tasks.register("adbReverse") {
+    doLast {
+        try {
+            exec {
+                commandLine("adb", "reverse", "tcp:8080", "tcp:8080")
+                isIgnoreExitValue = true
+            }
+            exec {
+                commandLine("adb", "reverse", "tcp:5000", "tcp:5000")
+                isIgnoreExitValue = true
+            }
+        } catch (e: Exception) {
+            println("adb reverse warning: ${e.message}")
+        }
+    }
+}
+
+tasks.named("preBuild") {
+    dependsOn("adbReverse")
+}
