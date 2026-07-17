@@ -1,22 +1,22 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { 
-  MapPin, 
-  Navigation, 
-  Route, 
-  Loader2, 
-  Search, 
-  AlertTriangle, 
-  Flag, 
-  X, 
-  ArrowLeft, 
-  ArrowUpDown, 
-  Check, 
+import {
+  MapPin,
+  Navigation,
+  Route,
+  Loader2,
+  Search,
+  AlertTriangle,
+  Flag,
+  X,
+  ArrowLeft,
+  ArrowUpDown,
+  Check,
   Car,
   Home,
   Menu,
   ChevronRight,
-  Info
+  Info,
 } from "lucide-react";
 import client from "../api/client";
 
@@ -52,6 +52,12 @@ export const FullMapPage = () => {
   const navigate = useNavigate();
 
   const [isDirectionsMode, setIsDirectionsMode] = useState(false);
+  const [isLocating, setIsLocating] = useState(true);
+  const [userLocation, setUserLocation] = useState<{
+    lat: number;
+    lon: number;
+  } | null>(null);
+  const userLocationMarkerRef = useRef<any>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchSuggestions, setSearchSuggestions] = useState<Coordinate[]>([]);
@@ -70,7 +76,8 @@ export const FullMapPage = () => {
   const [showEndSuggestions, setShowEndSuggestions] = useState(false);
   const [isSearchingEnd, setIsSearchingEnd] = useState(false);
 
-  const [selectedSearchPlace, setSelectedSearchPlace] = useState<Coordinate | null>(null);
+  const [selectedSearchPlace, setSelectedSearchPlace] =
+    useState<Coordinate | null>(null);
 
   const [potholes, setPotholes] = useState<Pothole[]>([]);
   const [routes, setRoutes] = useState<RouteOption[]>([]);
@@ -100,7 +107,14 @@ export const FullMapPage = () => {
     return parts.length > 0 ? parts.join(", ") : "Lokasi tidak bernama";
   };
 
-  const getDistanceToSegment = (lat: number, lon: number, lat1: number, lon1: number, lat2: number, lon2: number) => {
+  const getDistanceToSegment = (
+    lat: number,
+    lon: number,
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number,
+  ) => {
     const x = lon;
     const y = lat;
     const x1 = lon1;
@@ -116,15 +130,18 @@ export const FullMapPage = () => {
     let ny = y1;
 
     if (lenSq > 0) {
-      const t = Math.max(0, Math.min(1, ((x - x1) * dx + (y - y1) * dy) / lenSq));
+      const t = Math.max(
+        0,
+        Math.min(1, ((x - x1) * dx + (y - y1) * dy) / lenSq),
+      );
       nx = x1 + t * dx;
       ny = y1 + t * dy;
     }
 
     const latMid = (y + ny) / 2;
     const dLat = (y - ny) * 111139;
-    const dLon = (x - nx) * 111139 * Math.cos(latMid * Math.PI / 180);
-    
+    const dLon = (x - nx) * 111139 * Math.cos((latMid * Math.PI) / 180);
+
     return Math.sqrt(dLat * dLat + dLon * dLon);
   };
 
@@ -132,7 +149,9 @@ export const FullMapPage = () => {
     try {
       const res = await client.get("/public/reports");
       const list: Pothole[] = res.data || [];
-      const valid = list.filter(p => p.latitude && p.longitude && p.status !== "SELESAI");
+      const valid = list.filter(
+        (p) => p.latitude && p.longitude && p.status !== "SELESAI",
+      );
       setPotholes(valid);
     } catch (err) {
       console.error(err);
@@ -151,7 +170,9 @@ export const FullMapPage = () => {
     setShowSearchSuggestions(true);
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        const res = await fetch(`https://photon.komoot.io/api?q=${encodeURIComponent(val)}&limit=5&countrycode=id`);
+        const res = await fetch(
+          `https://photon.komoot.io/api?q=${encodeURIComponent(val)}&limit=5&countrycode=id`,
+        );
         if (res.ok) {
           const data = await res.json();
           const items = (data.features || []).map((f: any) => {
@@ -159,7 +180,7 @@ export const FullMapPage = () => {
             return {
               lat: coords[1],
               lon: coords[0],
-              name: formatPhotonFeature(f)
+              name: formatPhotonFeature(f),
             };
           });
           setSearchSuggestions(items);
@@ -183,7 +204,9 @@ export const FullMapPage = () => {
     setShowStartSuggestions(true);
     startTimeoutRef.current = setTimeout(async () => {
       try {
-        const res = await fetch(`https://photon.komoot.io/api?q=${encodeURIComponent(val)}&limit=5&countrycode=id`);
+        const res = await fetch(
+          `https://photon.komoot.io/api?q=${encodeURIComponent(val)}&limit=5&countrycode=id`,
+        );
         if (res.ok) {
           const data = await res.json();
           const items = (data.features || []).map((f: any) => {
@@ -191,7 +214,7 @@ export const FullMapPage = () => {
             return {
               lat: coords[1],
               lon: coords[0],
-              name: formatPhotonFeature(f)
+              name: formatPhotonFeature(f),
             };
           });
           setStartSuggestions(items);
@@ -215,7 +238,9 @@ export const FullMapPage = () => {
     setShowEndSuggestions(true);
     endTimeoutRef.current = setTimeout(async () => {
       try {
-        const res = await fetch(`https://photon.komoot.io/api?q=${encodeURIComponent(val)}&limit=5&countrycode=id`);
+        const res = await fetch(
+          `https://photon.komoot.io/api?q=${encodeURIComponent(val)}&limit=5&countrycode=id`,
+        );
         if (res.ok) {
           const data = await res.json();
           const items = (data.features || []).map((f: any) => {
@@ -223,7 +248,7 @@ export const FullMapPage = () => {
             return {
               lat: coords[1],
               lon: coords[0],
-              name: formatPhotonFeature(f)
+              name: formatPhotonFeature(f),
             };
           });
           setEndSuggestions(items);
@@ -319,7 +344,7 @@ export const FullMapPage = () => {
                 if (wp.distance >= 40 && wp.distance <= 500) {
                   detourCandidates.push({
                     lat: wp.location[1],
-                    lon: wp.location[0]
+                    lon: wp.location[0],
                   });
                 }
               });
@@ -360,8 +385,14 @@ export const FullMapPage = () => {
           const scale = 0.0027;
           const perpX = (-dy / length) * scale;
           const perpY = (dx / length) * scale;
-          detourCandidates.push({ lat: pothole.latitude + perpY, lon: pothole.longitude - perpX });
-          detourCandidates.push({ lat: pothole.latitude - perpY, lon: pothole.longitude + perpX });
+          detourCandidates.push({
+            lat: pothole.latitude + perpY,
+            lon: pothole.longitude - perpX,
+          });
+          detourCandidates.push({
+            lat: pothole.latitude - perpY,
+            lon: pothole.longitude + perpX,
+          });
         }
 
         const latMid = (startCoords.lat + endCoords.lat) / 2;
@@ -374,16 +405,30 @@ export const FullMapPage = () => {
           const perpLineX = -lineDy / lineLength;
           const perpLineY = lineDx / lineLength;
 
-          detourCandidates.push({ lat: latMid + perpLineY * 0.005, lon: lonMid - perpLineX * 0.005 });
-          detourCandidates.push({ lat: latMid - perpLineY * 0.005, lon: lonMid + perpLineX * 0.005 });
-          detourCandidates.push({ lat: latMid + perpLineY * 0.009, lon: lonMid - perpLineX * 0.009 });
-          detourCandidates.push({ lat: latMid - perpLineY * 0.009, lon: lonMid + perpLineX * 0.009 });
+          detourCandidates.push({
+            lat: latMid + perpLineY * 0.005,
+            lon: lonMid - perpLineX * 0.005,
+          });
+          detourCandidates.push({
+            lat: latMid - perpLineY * 0.005,
+            lon: lonMid + perpLineX * 0.005,
+          });
+          detourCandidates.push({
+            lat: latMid + perpLineY * 0.009,
+            lon: lonMid - perpLineX * 0.009,
+          });
+          detourCandidates.push({
+            lat: latMid - perpLineY * 0.009,
+            lon: lonMid + perpLineX * 0.009,
+          });
         }
 
         const uniqueCandidates: { lat: number; lon: number }[] = [];
-        detourCandidates.forEach(cand => {
-          const duplicate = uniqueCandidates.some(u => 
-            Math.abs(u.lat - cand.lat) < 0.0009 && Math.abs(u.lon - cand.lon) < 0.0009
+        detourCandidates.forEach((cand) => {
+          const duplicate = uniqueCandidates.some(
+            (u) =>
+              Math.abs(u.lat - cand.lat) < 0.0009 &&
+              Math.abs(u.lon - cand.lon) < 0.0009,
           );
           if (!duplicate) {
             uniqueCandidates.push(cand);
@@ -423,9 +468,10 @@ export const FullMapPage = () => {
                 });
 
                 if (detourPotholes.length < bestRoute.potholes.length) {
-                  const isDuplicate = calculatedOptions.some(opt => 
-                    Math.abs(opt.distance - detourRoute.distance) < 150 && 
-                    opt.potholes.length === detourPotholes.length
+                  const isDuplicate = calculatedOptions.some(
+                    (opt) =>
+                      Math.abs(opt.distance - detourRoute.distance) < 150 &&
+                      opt.potholes.length === detourPotholes.length,
                   );
 
                   if (!isDuplicate) {
@@ -451,16 +497,50 @@ export const FullMapPage = () => {
       }
 
       calculatedOptions.sort((a, b) => a.potholes.length - b.potholes.length);
-      calculatedOptions = calculatedOptions.map((opt, idx) => ({ ...opt, index: idx }));
+      calculatedOptions = calculatedOptions.map((opt, idx) => ({
+        ...opt,
+        index: idx,
+      }));
 
       setRoutes(calculatedOptions);
       setSelectedRouteIndex(0);
     } catch (err: any) {
       console.error(err);
-      setRouteError(err.message || "Gagal menghubungkan ke OSRM routing server.");
+      setRouteError(
+        err.message || "Gagal menghubungkan ke OSRM routing server.",
+      );
     } finally {
       setIsLoadingRoute(false);
     }
+  };
+
+  const addUserLocationMarker = (
+    L: any,
+    map: any,
+    lat: number,
+    lon: number,
+  ) => {
+    if (userLocationMarkerRef.current) {
+      userLocationMarkerRef.current.remove();
+    }
+    const userIcon = L.divIcon({
+      className: "custom-user-location-icon",
+      html: `<div style="position:relative;width:40px;height:40px;display:flex;align-items:center;justify-content:center;">
+               <div style="position:absolute;width:40px;height:40px;border-radius:50%;background:rgba(26,115,232,0.2);animation:pulse-ring 1.8s ease-out infinite;"></div>
+               <div style="position:absolute;width:24px;height:24px;border-radius:50%;background:#1a73e8;border:3px solid white;box-shadow:0 2px 8px rgba(26,115,232,0.6);"></div>
+             </div>`,
+      iconSize: [40, 40],
+      iconAnchor: [20, 20],
+    });
+    userLocationMarkerRef.current = L.marker([lat, lon], {
+      icon: userIcon,
+      zIndexOffset: 1000,
+    })
+      .bindPopup(
+        `<p class="text-xs font-semibold font-sans p-1 text-brand-600">📍 Lokasi Anda Saat Ini</p>`,
+      )
+      .addTo(map)
+      .openPopup();
   };
 
   useEffect(() => {
@@ -469,17 +549,40 @@ export const FullMapPage = () => {
     if (mapInstanceRef.current) return;
 
     const map = L.map(mapContainerRef.current, {
-      zoomControl: false 
+      zoomControl: false,
     }).setView([-6.295, 106.648], 13);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(map);
 
     L.control.zoom({ position: "bottomright" }).addTo(map);
 
     mapInstanceRef.current = map;
     fetchPotholes();
+
+    if (navigator.geolocation) {
+      setIsLocating(true);
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setUserLocation({ lat: latitude, lon: longitude });
+          setIsLocating(false);
+          map.flyTo([latitude, longitude], 15, {
+            animate: true,
+            duration: 1.5,
+          });
+          addUserLocationMarker(L, map, latitude, longitude);
+        },
+        () => {
+          setIsLocating(false);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+      );
+    } else {
+      setIsLocating(false);
+    }
 
     return () => {
       if (mapInstanceRef.current) {
@@ -493,10 +596,10 @@ export const FullMapPage = () => {
     const L = (window as any).L;
     if (!L || !mapInstanceRef.current) return;
 
-    potholeMarkersRef.current.forEach(m => m.remove());
+    potholeMarkersRef.current.forEach((m) => m.remove());
     potholeMarkersRef.current = [];
 
-    potholes.forEach(p => {
+    potholes.forEach((p) => {
       const potholeIcon = L.divIcon({
         className: "custom-pothole-icon",
         html: `<div class="w-8 h-8 rounded-full bg-slate-900 border-2 border-white flex items-center justify-center shadow-lg hover:scale-115 transition duration-200">
@@ -507,10 +610,10 @@ export const FullMapPage = () => {
                  </svg>
                </div>`,
         iconSize: [32, 32],
-        iconAnchor: [16, 16]
+        iconAnchor: [16, 16],
       });
 
-      const photoHtml = p.photo 
+      const photoHtml = p.photo
         ? `<div class="mt-2 rounded overflow-hidden h-20 bg-slate-100 flex items-center justify-center">
              <img src="data:image/jpeg;base64,${p.photo}" class="w-full h-full object-cover" />
            </div>`
@@ -520,7 +623,7 @@ export const FullMapPage = () => {
         <div class="p-3 max-w-[210px] text-ink font-sans">
           <div class="flex items-center justify-between gap-2 border-b border-line pb-1.5 mb-2">
             <span class="text-[9px] font-mono font-bold bg-brand-50 text-brand-600 px-1.5 py-0.5 rounded">${p.uid}</span>
-            <span class="text-[9px] px-1.5 py-0.5 rounded font-semibold bg-amber-50 text-warning">${p.status.replace('_', ' ')}</span>
+            <span class="text-[9px] px-1.5 py-0.5 rounded font-semibold bg-amber-50 text-warning">${p.status.replace("_", " ")}</span>
           </div>
           <h4 class="text-xs font-semibold text-ink leading-tight mb-1">${p.location}</h4>
           <p class="text-[10px] text-muted leading-relaxed">${p.description}</p>
@@ -543,7 +646,7 @@ export const FullMapPage = () => {
     const L = (window as any).L;
     if (!L || !mapInstanceRef.current) return;
 
-    routeLayersRef.current.forEach(layer => layer.remove());
+    routeLayersRef.current.forEach((layer) => layer.remove());
     routeLayersRef.current = [];
 
     if (startMarkerRef.current) startMarkerRef.current.remove();
@@ -556,10 +659,14 @@ export const FullMapPage = () => {
         className: "custom-start-icon",
         html: `<div class="w-8 h-8 rounded-full bg-emerald-600 border-2 border-white flex items-center justify-center shadow-lg font-bold text-white text-xs">A</div>`,
         iconSize: [32, 32],
-        iconAnchor: [16, 16]
+        iconAnchor: [16, 16],
       });
-      startMarkerRef.current = L.marker([startCoords.lat, startCoords.lon], { icon: startIcon })
-        .bindPopup(`<p class="text-xs font-semibold font-sans p-1">${startCoords.name}</p>`)
+      startMarkerRef.current = L.marker([startCoords.lat, startCoords.lon], {
+        icon: startIcon,
+      })
+        .bindPopup(
+          `<p class="text-xs font-semibold font-sans p-1">${startCoords.name}</p>`,
+        )
         .addTo(mapInstanceRef.current);
     }
 
@@ -568,10 +675,14 @@ export const FullMapPage = () => {
         className: "custom-end-icon",
         html: `<div class="w-8 h-8 rounded-full bg-rose-600 border-2 border-white flex items-center justify-center shadow-lg font-bold text-white text-xs">B</div>`,
         iconSize: [32, 32],
-        iconAnchor: [16, 16]
+        iconAnchor: [16, 16],
       });
-      endMarkerRef.current = L.marker([endCoords.lat, endCoords.lon], { icon: endIcon })
-        .bindPopup(`<p class="text-xs font-semibold font-sans p-1">${endCoords.name}</p>`)
+      endMarkerRef.current = L.marker([endCoords.lat, endCoords.lon], {
+        icon: endIcon,
+      })
+        .bindPopup(
+          `<p class="text-xs font-semibold font-sans p-1">${endCoords.name}</p>`,
+        )
         .addTo(mapInstanceRef.current);
     }
 
@@ -580,14 +691,17 @@ export const FullMapPage = () => {
 
       routes.forEach((route, idx) => {
         const isSelected = idx === selectedRouteIndex;
-        const latLngs = route.geometry.coordinates.map((c: any) => [c[1], c[0]]);
+        const latLngs = route.geometry.coordinates.map((c: any) => [
+          c[1],
+          c[0],
+        ]);
         allLatLngs.push(...latLngs);
 
         const polyline = L.polyline(latLngs, {
-          color: isSelected ? "#1a73e8" : "#9ca3af", 
+          color: isSelected ? "#1a73e8" : "#9ca3af",
           weight: isSelected ? 6 : 4,
           opacity: isSelected ? 0.95 : 0.6,
-          dashArray: isSelected ? undefined : "5, 5"
+          dashArray: isSelected ? undefined : "5, 5",
         }).addTo(mapInstanceRef.current);
 
         polyline.on("click", () => {
@@ -596,7 +710,7 @@ export const FullMapPage = () => {
 
         polyline.bindTooltip(
           `Rute ${idx + 1}: ${(route.distance / 1000).toFixed(1)} km | ${Math.ceil(route.duration / 60)} mnt | ${route.potholes.length} lubang`,
-          { sticky: true }
+          { sticky: true },
         );
 
         routeLayersRef.current.push(polyline);
@@ -620,9 +734,12 @@ export const FullMapPage = () => {
       const searchBox = document.getElementById("main-search-container");
       const startBox = document.getElementById("start-input-container");
       const endBox = document.getElementById("end-input-container");
-      if (searchBox && !searchBox.contains(e.target as Node)) setShowSearchSuggestions(false);
-      if (startBox && !startBox.contains(e.target as Node)) setShowStartSuggestions(false);
-      if (endBox && !endBox.contains(e.target as Node)) setShowEndSuggestions(false);
+      if (searchBox && !searchBox.contains(e.target as Node))
+        setShowSearchSuggestions(false);
+      if (startBox && !startBox.contains(e.target as Node))
+        setShowStartSuggestions(false);
+      if (endBox && !endBox.contains(e.target as Node))
+        setShowEndSuggestions(false);
     };
 
     document.addEventListener("click", handleOutsideClick);
@@ -637,17 +754,20 @@ export const FullMapPage = () => {
 
   return (
     <div className="h-screen w-screen relative overflow-hidden bg-slate-100 flex flex-col font-sans">
-      <div ref={mapContainerRef} className="absolute inset-0 h-full w-full z-10" />
+      <div
+        ref={mapContainerRef}
+        className="absolute inset-0 h-full w-full z-10"
+      />
 
       <div className="absolute top-4 right-4 z-20 flex items-center gap-3">
-        <Link 
+        <Link
           to="/"
           className="h-10 px-4 rounded-xl bg-white border border-line shadow-md hover:bg-slate-50 transition text-xs font-semibold text-ink flex items-center gap-2"
         >
           <Home size={14} className="text-brand-600" />
           Beranda
         </Link>
-        <Link 
+        <Link
           to="/lapor"
           className="h-10 px-4 rounded-xl bg-brand-600 shadow-md hover:bg-brand-700 transition text-xs font-semibold text-white flex items-center gap-2"
         >
@@ -656,15 +776,49 @@ export const FullMapPage = () => {
         </Link>
       </div>
 
+      {isLocating && (
+        <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2.5 bg-white border border-line shadow-lg rounded-full px-4 py-2.5 text-xs font-semibold text-ink animate-toast-in">
+          <Loader2 size={14} className="animate-spin text-brand-600" />
+          Mendeteksi lokasi GPS...
+        </div>
+      )}
+
+      {userLocation && !isLocating && (
+        <button
+          title="Ke Lokasi Saya"
+          onClick={() => {
+            const L = (window as any).L;
+            if (mapInstanceRef.current && userLocation) {
+              mapInstanceRef.current.flyTo(
+                [userLocation.lat, userLocation.lon],
+                15,
+                { animate: true, duration: 1 },
+              );
+              if (userLocationMarkerRef.current) {
+                userLocationMarkerRef.current.openPopup();
+              }
+            }
+          }}
+          className="absolute bottom-24 right-4 z-30 w-11 h-11 rounded-full bg-white border border-line shadow-lg flex items-center justify-center hover:bg-brand-50 hover:border-brand-400 transition group"
+        >
+          <Navigation
+            size={18}
+            className="text-brand-600 fill-brand-600 group-hover:scale-110 transition"
+          />
+        </button>
+      )}
+
       <div className="absolute top-4 left-4 z-20 w-full max-w-[390px] flex flex-col gap-3 pointer-events-none">
-        
         {!isDirectionsMode && (
-          <div 
+          <div
             id="main-search-container"
             className="w-full bg-white rounded-2xl shadow-lg border border-line p-1 flex flex-col pointer-events-auto"
           >
             <div className="h-12 flex items-center px-3 gap-2">
-              <Menu size={18} className="text-muted shrink-0 cursor-pointer hover:text-ink transition" />
+              <Menu
+                size={18}
+                className="text-muted shrink-0 cursor-pointer hover:text-ink transition"
+              />
               <input
                 type="text"
                 value={searchQuery}
@@ -674,16 +828,19 @@ export const FullMapPage = () => {
                 className="flex-1 h-full outline-none text-sm text-ink bg-transparent"
               />
               {searchQuery && (
-                <button 
-                  onClick={() => { setSearchQuery(""); setSearchSuggestions([]); }}
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSearchSuggestions([]);
+                  }}
                   className="p-1.5 text-muted hover:text-ink"
                 >
                   <X size={15} />
                 </button>
               )}
-              
+
               <div className="h-6 w-[1px] bg-line mx-1" />
-              
+
               <button
                 onClick={() => {
                   if (selectedSearchPlace) {
@@ -718,21 +875,30 @@ export const FullMapPage = () => {
                       setSearchSuggestions([]);
                       const L = (window as any).L;
                       if (mapInstanceRef.current && L) {
-                        mapInstanceRef.current.setView([item.lat, item.lon], 16);
-                        
-                        if (searchMarkerRef.current) searchMarkerRef.current.remove();
-                        
+                        mapInstanceRef.current.setView(
+                          [item.lat, item.lon],
+                          16,
+                        );
+
+                        if (searchMarkerRef.current)
+                          searchMarkerRef.current.remove();
+
                         const searchIcon = L.divIcon({
                           className: "custom-search-icon",
                           html: `<div class="w-8 h-8 rounded-full bg-brand-600 border-2 border-white flex items-center justify-center shadow-lg transform scale-110">
                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m8 12 4 4 8-8"/></svg>
                                  </div>`,
                           iconSize: [32, 32],
-                          iconAnchor: [16, 16]
+                          iconAnchor: [16, 16],
                         });
-                        
-                        searchMarkerRef.current = L.marker([item.lat, item.lon], { icon: searchIcon })
-                          .bindPopup(`<p class="text-xs font-semibold font-sans p-1">${item.name}</p>`)
+
+                        searchMarkerRef.current = L.marker(
+                          [item.lat, item.lon],
+                          { icon: searchIcon },
+                        )
+                          .bindPopup(
+                            `<p class="text-xs font-semibold font-sans p-1">${item.name}</p>`,
+                          )
                           .addTo(mapInstanceRef.current)
                           .openPopup();
                       }
@@ -745,20 +911,21 @@ export const FullMapPage = () => {
                 ))}
               </div>
             )}
-            
-            {showSearchSuggestions && isSearchingLocation && searchSuggestions.length === 0 && (
-              <div className="border-t border-line px-4 py-3 text-xs text-muted flex items-center gap-2">
-                <Loader2 size={12} className="animate-spin text-brand-600" />
-                Mencari alamat...
-              </div>
-            )}
+
+            {showSearchSuggestions &&
+              isSearchingLocation &&
+              searchSuggestions.length === 0 && (
+                <div className="border-t border-line px-4 py-3 text-xs text-muted flex items-center gap-2">
+                  <Loader2 size={12} className="animate-spin text-brand-600" />
+                  Mencari alamat...
+                </div>
+              )}
           </div>
         )}
 
         {isDirectionsMode && (
           <div className="w-full flex flex-col gap-3">
             <div className="w-full bg-white rounded-2xl shadow-lg border border-line p-4 flex flex-col gap-3 pointer-events-auto relative">
-              
               <div className="flex items-center justify-between pb-1 border-b border-line/60">
                 <div className="flex items-center gap-2 text-xs font-bold text-ink uppercase tracking-wider">
                   <Car size={16} className="text-brand-600" />
@@ -768,7 +935,8 @@ export const FullMapPage = () => {
                   onClick={() => {
                     setIsDirectionsMode(false);
                     setRoutes([]);
-                    if (searchMarkerRef.current) searchMarkerRef.current.remove();
+                    if (searchMarkerRef.current)
+                      searchMarkerRef.current.remove();
                   }}
                   className="p-1 rounded-full hover:bg-slate-100 text-muted hover:text-ink transition"
                 >
@@ -778,9 +946,13 @@ export const FullMapPage = () => {
 
               <div className="flex gap-2 items-center">
                 <div className="flex flex-col items-center gap-1 shrink-0 py-1">
-                  <span className="h-3.5 w-3.5 rounded-full bg-emerald-600 border border-white shadow-sm flex items-center justify-center text-[7px] text-white font-bold">A</span>
+                  <span className="h-3.5 w-3.5 rounded-full bg-emerald-600 border border-white shadow-sm flex items-center justify-center text-[7px] text-white font-bold">
+                    A
+                  </span>
                   <div className="w-[1.5px] h-6 bg-slate-300 border-dashed" />
-                  <span className="h-3.5 w-3.5 rounded-full bg-rose-600 border border-white shadow-sm flex items-center justify-center text-[7px] text-white font-bold">B</span>
+                  <span className="h-3.5 w-3.5 rounded-full bg-rose-600 border border-white shadow-sm flex items-center justify-center text-[7px] text-white font-bold">
+                    B
+                  </span>
                 </div>
 
                 <div className="flex-1 flex flex-col gap-2">
@@ -794,14 +966,17 @@ export const FullMapPage = () => {
                       className="h-9 w-full pl-3 pr-8 rounded-lg border border-line bg-slate-50 text-xs text-ink outline-none transition focus:border-brand-600 focus:bg-white focus:ring-2 focus:ring-brand-100"
                     />
                     {startQuery && (
-                      <button 
-                        onClick={() => { setStartQuery(""); setStartCoords(null); }}
+                      <button
+                        onClick={() => {
+                          setStartQuery("");
+                          setStartCoords(null);
+                        }}
                         className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-ink p-1"
                       >
                         <X size={12} />
                       </button>
                     )}
-                    
+
                     {showStartSuggestions && startSuggestions.length > 0 && (
                       <div className="absolute left-0 right-0 z-50 mt-1 max-h-40 overflow-y-auto rounded-lg border border-line bg-white shadow-lg text-xs divide-y divide-line">
                         {startSuggestions.map((item, i) => (
@@ -832,8 +1007,11 @@ export const FullMapPage = () => {
                       className="h-9 w-full pl-3 pr-8 rounded-lg border border-line bg-slate-50 text-xs text-ink outline-none transition focus:border-brand-600 focus:bg-white focus:ring-2 focus:ring-brand-100"
                     />
                     {endQuery && (
-                      <button 
-                        onClick={() => { setEndQuery(""); setEndCoords(null); }}
+                      <button
+                        onClick={() => {
+                          setEndQuery("");
+                          setEndCoords(null);
+                        }}
                         className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-ink p-1"
                       >
                         <X size={12} />
@@ -881,7 +1059,9 @@ export const FullMapPage = () => {
                   ) : (
                     <Navigation size={12} className="rotate-45" />
                   )}
-                  {isLoadingRoute ? "Menghitung Rute..." : "Hitung Rute Teraman"}
+                  {isLoadingRoute
+                    ? "Menghitung Rute..."
+                    : "Hitung Rute Teraman"}
                 </button>
               </div>
 
@@ -913,7 +1093,7 @@ export const FullMapPage = () => {
                         key={i}
                         onClick={() => setSelectedRouteIndex(i)}
                         className={`p-3 rounded-xl border cursor-pointer transition text-left flex flex-col gap-1 ${
-                          isSelected 
+                          isSelected
                             ? "border-brand-500 bg-brand-50/50 shadow-sm"
                             : "border-line bg-white hover:border-slate-300"
                         }`}
@@ -931,17 +1111,25 @@ export const FullMapPage = () => {
 
                         <div className="flex items-center justify-between text-[11px] text-muted">
                           <div>
-                            <span className="font-semibold text-ink">{(route.distance / 1000).toFixed(1)} km</span>
+                            <span className="font-semibold text-ink">
+                              {(route.distance / 1000).toFixed(1)} km
+                            </span>
                             <span className="mx-1">•</span>
-                            <span className="font-semibold text-ink">{Math.ceil(route.duration / 60)} mnt</span>
+                            <span className="font-semibold text-ink">
+                              {Math.ceil(route.duration / 60)} mnt
+                            </span>
                           </div>
 
-                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
-                            hasPotholes 
-                              ? "bg-red-50 text-danger" 
-                              : "bg-emerald-50 text-success"
-                          }`}>
-                            {hasPotholes ? `${route.potholes.length} Lubang` : "Aman (0 lubang)"}
+                          <span
+                            className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                              hasPotholes
+                                ? "bg-red-50 text-danger"
+                                : "bg-emerald-50 text-success"
+                            }`}
+                          >
+                            {hasPotholes
+                              ? `${route.potholes.length} Lubang`
+                              : "Aman (0 lubang)"}
                           </span>
                         </div>
                       </div>
@@ -977,9 +1165,13 @@ export const FullMapPage = () => {
               <p className="text-[10px] text-muted">Estimasi Waktu</p>
             </div>
             <div>
-              <p className={`font-bold text-sm ${
-                routes[selectedRouteIndex].potholes.length > 0 ? "text-danger" : "text-emerald-600"
-              }`}>
+              <p
+                className={`font-bold text-sm ${
+                  routes[selectedRouteIndex].potholes.length > 0
+                    ? "text-danger"
+                    : "text-emerald-600"
+                }`}
+              >
                 {routes[selectedRouteIndex].potholes.length} Lubang
               </p>
               <p className="text-[10px] text-muted">Dilewati</p>
@@ -988,13 +1180,23 @@ export const FullMapPage = () => {
 
           {routes[selectedRouteIndex].potholes.length > 0 ? (
             <div className="mt-1 bg-amber-50 text-warning text-[10px] p-2.5 rounded-lg border border-amber-100/50 flex items-start gap-1.5 leading-relaxed">
-              <AlertTriangle size={13} className="shrink-0 mt-0.5 text-warning" />
-              <p>Perhatian! Rute ini melewati {routes[selectedRouteIndex].potholes.length} lubang jalan aktif. Mohon kurangi kecepatan dan berhati-hati.</p>
+              <AlertTriangle
+                size={13}
+                className="shrink-0 mt-0.5 text-warning"
+              />
+              <p>
+                Perhatian! Rute ini melewati{" "}
+                {routes[selectedRouteIndex].potholes.length} lubang jalan aktif.
+                Mohon kurangi kecepatan dan berhati-hati.
+              </p>
             </div>
           ) : (
             <div className="mt-1 bg-emerald-50 text-emerald-700 text-[10px] p-2.5 rounded-lg border border-emerald-100/50 flex items-start gap-1.5 leading-relaxed">
               <Check size={13} className="shrink-0 mt-0.5 text-emerald-600" />
-              <p>Hebat! Ini adalah rute aman bebas dari titik lubang jalan rusak yang dilaporkan di database kami.</p>
+              <p>
+                Hebat! Ini adalah rute aman bebas dari titik lubang jalan rusak
+                yang dilaporkan di database kami.
+              </p>
             </div>
           )}
         </div>

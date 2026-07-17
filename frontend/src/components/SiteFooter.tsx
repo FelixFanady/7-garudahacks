@@ -3,61 +3,60 @@ import sigapLogo from "../photos/siap_logo.png";
 
 export const SiteFooter = () => {
   return (
-    <footer className="border-t border-line bg-slate-50 text-ink py-12 px-5 sm:px-8 mt-auto">
-      <div className="mx-auto max-w-7xl">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-8 border-b border-line">
-          {/* Brand Info */}
-          <div className="flex items-center gap-3">
-            <img
-              src={sigapLogo}
-              alt="SIGAP Logo"
-              className="h-8 w-auto object-contain shrink-0"
-            />
-            <div>
+    <footer className="border-t border-line bg-white text-ink">
+      <div className="mx-auto max-w-7xl px-5 sm:px-8 py-12">
+        <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
+          {/* Brand */}
+          <div className="max-w-xs">
+            <div className="flex items-center gap-2.5 mb-3">
+              <img
+                src={sigapLogo}
+                alt="SIGAP Logo"
+                className="h-8 w-auto object-contain shrink-0"
+              />
               <span className="text-sm font-bold tracking-[0.15em] text-ink uppercase">
                 SIGAP JALAN
               </span>
-              <p className="text-xs text-muted mt-0.5">
-                Sistem Antisipasi Jalan Berlubang & Progres Perbaikan AI
-              </p>
             </div>
+            <p className="text-xs leading-6 text-muted">
+              Sistem Antisipasi Jalan Berlubang berbasis AI untuk transparansi
+              dan keselamatan berkendara bersama.
+            </p>
           </div>
 
           {/* Links */}
-          <nav className="flex flex-wrap gap-x-6 gap-y-2 text-xs font-semibold text-muted">
-            <a className="hover:text-ink transition" href="/#hero">
-              Beranda
-            </a>
-            <a className="hover:text-ink transition" href="/lapor">
-              Laporkan Jalan
-            </a>
-            <a className="hover:text-ink transition" href="/#rute">
-              Rute Aman
-            </a>
-            <a
-              className="hover:text-ink transition"
-              href="/laporan/transparansi"
-            >
-              Transparansi Laporan
-            </a>
-            <a className="hover:text-ink transition" href="/login">
-              Portal Staf
-            </a>
-          </nav>
+          <div className="grid grid-cols-2 gap-x-12 gap-y-2 sm:grid-cols-3">
+            {[
+              { href: "/", label: "Beranda" },
+              { href: "/lapor", label: "Laporkan Jalan" },
+              { href: "/maps", label: "Maps" },
+              { href: "/laporan/transparansi", label: "Transparansi" },
+              { href: "/login", label: "Login" },
+            ].map(({ href, label }) => (
+              <a
+                key={href}
+                href={href}
+                className="text-xs font-medium text-muted hover:text-ink transition"
+              >
+                {label}
+              </a>
+            ))}
+          </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-6 text-[11px] text-muted">
-          <p>
-            © 2026 SIGAP JALAN. Dikembangkan untuk keselamatan berkendara
-            bersama.
+        {/* Bottom strip */}
+        <div className="mt-10 flex flex-col gap-3 border-t border-line pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-[11px] text-muted">
+            © 2026 SIGAP JALAN. Because We Care About Roads. All rights
+            reserved.
           </p>
-          <div className="flex gap-4">
+          <div className="flex gap-5 text-[11px] text-muted">
             <span className="cursor-default hover:text-ink transition">
               Kebijakan Privasi
             </span>
             <span>•</span>
             <span className="cursor-default hover:text-ink transition">
-              Syarat & Ketentuan
+              Syarat &amp; Ketentuan
             </span>
           </div>
         </div>

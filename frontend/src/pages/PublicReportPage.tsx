@@ -53,9 +53,16 @@ export const PublicReportPage = () => {
   const mapInstanceRef = React.useRef<any>(null);
   const markerInstanceRef = React.useRef<any>(null);
 
+  const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        toast.showError("Hanya file gambar (JPG, PNG, WEBP) yang diizinkan. GIF dan video tidak diperbolehkan.");
+        e.target.value = "";
+        return;
+      }
       setPhoto(file);
       setPhotoPreview(URL.createObjectURL(file));
     }
@@ -610,11 +617,11 @@ export const PublicReportPage = () => {
                         Pilih File Foto
                       </span>
                       <span className="text-xs text-muted mt-1">
-                        PNG, JPG atau JPEG
+                        PNG, JPG, atau WEBP (maks. gambar statis)
                       </span>
                       <input
                         type="file"
-                        accept="image/*"
+                        accept="image/jpeg,image/jpg,image/png,image/webp"
                         onChange={handlePhotoChange}
                         className="hidden"
                       />

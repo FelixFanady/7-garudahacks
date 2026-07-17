@@ -58,7 +58,9 @@ export const LoginPage = () => {
           toast.showError(errMsg);
         }
       } else {
-        toast.showError("Koneksi gagal. Pastikan server backend Anda berjalan.");
+        toast.showError(
+          "Koneksi gagal. Pastikan server backend Anda berjalan.",
+        );
       }
     } finally {
       setIsLoading(false);
@@ -84,25 +86,28 @@ export const LoginPage = () => {
         {/* Subtle top brand line */}
         <div className="absolute top-0 inset-x-0 h-1 bg-brand-600" />
 
-        <img src={sigapLogo} alt="SIGAP Logo" className="mx-auto h-12 w-auto object-contain mt-2" />
+        <img
+          src={sigapLogo}
+          alt="SIGAP Logo"
+          className="mx-auto h-12 w-auto object-contain mt-2"
+        />
 
         <div className="mt-6 text-center">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-600">
-            Staff Internal Portal
-          </p>
-          <h1 className="mt-3 text-2xl font-bold tracking-tight text-ink">
-            Masuk SIGAP JALAN
-          </h1>
-          <p className="mt-2 text-xs leading-5 text-muted">
-            Akses dashboard monitoring untuk Admin, Support, dan Maintenance Engineering.
+            STAFF LOGIN
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-5">
           <div>
-            <label className="block text-sm font-semibold text-ink">Email</label>
+            <label className="block text-sm font-semibold text-ink">
+              Email
+            </label>
             <div className="mt-2 relative">
-              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" size={16} />
+              <Mail
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted"
+                size={16}
+              />
               <input
                 type="email"
                 value={email}
@@ -115,9 +120,14 @@ export const LoginPage = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-ink">Password</label>
+            <label className="block text-sm font-semibold text-ink">
+              Password
+            </label>
             <div className="mt-2 relative">
-              <LockKeyhole className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" size={16} />
+              <LockKeyhole
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted"
+                size={16}
+              />
               <input
                 type="password"
                 value={password}
@@ -142,10 +152,6 @@ export const LoginPage = () => {
             {isLoading ? "Memproses..." : "Masuk"}
           </button>
         </form>
-
-        <p className="mt-6 text-center text-xs leading-5 text-muted border-t border-line/60 pt-4">
-          Pembuatan akun baru hanya dapat dilakukan oleh Administrator.
-        </p>
       </section>
     </main>
   );
