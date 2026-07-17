@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { ArrowRight, BarChart3, CheckCircle2, MapPinned, Loader2 } from "lucide-react";
+import { ArrowRight, BarChart3, CheckCircle2, MapPinned, Loader2, Camera, HardHat, Search } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { PublicReportCard } from "../components/PublicReportCard";
 import { MapRoutingPreview } from "../components/MapRoutingPreview";
 import { SiteHeader } from "../components/SiteHeader";
@@ -21,6 +22,15 @@ export const HomePage = () => {
 
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/laporan/transparansi?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
   useEffect(() => {
     const fetchReports = async () => {
@@ -35,6 +45,7 @@ export const HomePage = () => {
     };
     fetchReports();
   }, []);
+
   return (
     <main className="min-h-screen bg-white text-ink">
       <SiteHeader />
@@ -53,28 +64,59 @@ export const HomePage = () => {
             lebih aman, melihat laporan kerusakan, dan memantau progres perbaikan
             secara terbuka.
           </p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <a
-              href="/lapor"
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-brand-600 px-5 text-sm font-semibold text-white transition hover:bg-brand-700"
-            >
-              Laporkan Jalan Rusak
-              <ArrowRight size={17} />
-            </a>
-            <a
-              href="#rute"
-              className="inline-flex h-12 items-center justify-center rounded-lg border border-line bg-white px-5 text-sm font-semibold text-ink transition hover:border-brand-100 hover:bg-brand-50"
-            >
-              Cek Rute Aman
-            </a>
-            <a
-              href="#transparansi"
-              className="inline-flex h-12 items-center justify-center rounded-lg border border-line bg-white px-5 text-sm font-semibold text-ink transition hover:border-brand-100 hover:bg-brand-50"
-            >
-              Progres Perbaikan
-            </a>
+          
+          {/* Search Bar */}
+          <form onSubmit={handleSearchSubmit} className="mt-8 max-w-md relative">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted" size={18} />
+              <input
+                type="text"
+                placeholder="Cari ID laporan (e.g. ID-Lapor)..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-12 w-full pl-11 pr-24 rounded-full border border-line bg-white text-sm text-ink outline-none transition focus:border-brand-600 focus:ring-4 focus:ring-brand-100"
+              />
+              <button
+                type="submit"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 h-9 px-5 rounded-full bg-brand-600 text-xs font-semibold text-white hover:bg-brand-700 transition"
+              >
+                Cari
+              </button>
+            </div>
+          </form>
+
+          {/* Quick Actions Menu (Inspired by Banyuwangi-style circular icons grid) */}
+          <div className="mt-10 pt-6 border-t border-line/80">
+            <p className="text-xs font-bold uppercase tracking-wider text-muted mb-4">Akses Layanan</p>
+            <div className="flex flex-wrap gap-6 sm:gap-8">
+              <a href="/lapor" className="flex flex-col items-center gap-2 group text-center w-20">
+                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 shadow-sm border border-brand-100/50 transition duration-300 group-hover:scale-105 group-hover:shadow-md group-hover:bg-brand-600 group-hover:text-white">
+                  <Camera size={20} />
+                </span>
+                <span className="text-[11px] font-semibold text-ink group-hover:text-brand-600 transition">Laporkan</span>
+              </a>
+              <a href="/laporan/transparansi" className="flex flex-col items-center gap-2 group text-center w-20">
+                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-warning shadow-sm border border-amber-100/50 transition duration-300 group-hover:scale-105 group-hover:shadow-md group-hover:bg-brand-600 group-hover:text-white">
+                  <BarChart3 size={20} />
+                </span>
+                <span className="text-[11px] font-semibold text-ink group-hover:text-warning transition">Transparansi</span>
+              </a>
+              <a href="#rute" className="flex flex-col items-center gap-2 group text-center w-20">
+                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-success shadow-sm border border-emerald-100/50 transition duration-300 group-hover:scale-105 group-hover:shadow-md group-hover:bg-brand-600 group-hover:text-white">
+                  <MapPinned size={20} />
+                </span>
+                <span className="text-[11px] font-semibold text-ink group-hover:text-success transition">Rute Aman</span>
+              </a>
+              <a href="/login" className="flex flex-col items-center gap-2 group text-center w-20">
+                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-muted shadow-sm border border-line transition duration-300 group-hover:scale-105 group-hover:shadow-md group-hover:bg-brand-600 group-hover:text-white">
+                  <HardHat size={20} />
+                </span>
+                <span className="text-[11px] font-semibold text-ink group-hover:text-muted transition">Portal Staf</span>
+              </a>
+            </div>
           </div>
         </div>
+
 
         <div className="relative min-h-[420px] overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
           <div className="absolute inset-0 [background-image:linear-gradient(90deg,rgba(102,112,133,0.13)_1px,transparent_1px),linear-gradient(rgba(102,112,133,0.13)_1px,transparent_1px)] [background-size:56px_56px]" />

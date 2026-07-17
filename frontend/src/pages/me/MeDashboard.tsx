@@ -14,6 +14,7 @@ import { useToast } from "../../context/ToastContext";
 
 interface Report {
   id: number;
+  uid: string;
   location: string;
   description: string;
   source: "CITIZEN" | "SYSTEM";

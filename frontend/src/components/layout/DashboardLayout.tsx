@@ -68,11 +68,16 @@ export const DashboardLayout = () => {
       {/* Sidebar */}
       <aside className="flex w-64 flex-col border-r border-line bg-white">
         {/* Sidebar Header */}
-        <div className="flex h-16 items-center gap-3 border-b border-line px-6">
-          <img src={sigapLogo} alt="SIGAP Logo" className="h-8 w-auto object-contain" />
-          <span className="text-sm font-bold tracking-[0.15em] text-ink uppercase">
-            SIGAP JALAN
-          </span>
+        <div className="flex h-16 items-center border-b border-line px-6">
+          <Link
+            to={user?.role === "ADMIN" ? "/admin" : user?.role === "ME" ? "/me" : "/support"}
+            className="flex items-center gap-3 hover:opacity-85 transition"
+          >
+            <img src={sigapLogo} alt="SIGAP Logo" className="h-8 w-auto object-contain" />
+            <span className="text-sm font-bold tracking-[0.15em] text-ink uppercase">
+              SIGAP JALAN
+            </span>
+          </Link>
         </div>
 
         {/* Navigation Links */}
