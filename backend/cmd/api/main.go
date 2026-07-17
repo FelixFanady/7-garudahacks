@@ -28,10 +28,6 @@ func main() {
 		log.Fatalf("failed to run database migration: %v", err)
 	}
 
-	if err := seeder.SeedAdmin(db, cfg); err != nil {
-		log.Fatalf("failed to seed admin user: %v", err)
-	}
-
 	if err := seeder.SeedReports(db); err != nil {
 		log.Fatalf("failed to seed reports: %v", err)
 	}

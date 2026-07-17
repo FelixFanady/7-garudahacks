@@ -23,8 +23,6 @@ type Config struct {
 	JWTSecret       string
 	JWTExpiresHours int
 
-	SeedAdminEmail    string
-	SeedAdminPassword string
 
 	AIBackendURL string
 }
@@ -47,8 +45,6 @@ func Load() Config {
 	jwtSecret := mustGetEnv("JWT_SECRET")
 	jwtExpiresHours := mustGetEnvAsInt("JWT_EXPIRES_HOURS")
 
-	seedAdminEmail := mustGetEnv("SEED_ADMIN_EMAIL")
-	seedAdminPassword := mustGetEnv("SEED_ADMIN_PASSWORD")
 
 	aiBackendURL := mustGetEnv("AI_BACKEND_URL")
 
@@ -66,8 +62,6 @@ func Load() Config {
 		JWTSecret:       jwtSecret,
 		JWTExpiresHours: jwtExpiresHours,
 
-		SeedAdminEmail:    seedAdminEmail,
-		SeedAdminPassword: seedAdminPassword,
 
 		AIBackendURL: aiBackendURL,
 	}
