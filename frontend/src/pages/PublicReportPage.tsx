@@ -14,6 +14,8 @@ export const PublicReportPage = () => {
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
 
   // Autocomplete and Maps states
   const [suggestions, setSuggestions] = useState<any[]>([]);
@@ -61,6 +63,8 @@ export const PublicReportPage = () => {
   };
 
   const handleMapClickOrDrag = async (lat: number, lng: number) => {
+    setLatitude(lat);
+    setLongitude(lng);
     setIsSearching(true);
     setSearchError(null);
     try {
@@ -218,6 +222,11 @@ export const PublicReportPage = () => {
       return;
     }
 
+    if (latitude === null || longitude === null) {
+      toast.showError("Silakan tentukan titik koordinat lokasi jalan rusak dengan mengklik peta atau memilih dari kotak pencarian.");
+      return;
+    }
+
     setIsLoading(true);
     const loadingId = toast.showLoading("Mengirim laporan Anda...");
 
@@ -225,6 +234,8 @@ export const PublicReportPage = () => {
     formData.append("reporter_name", name);
     formData.append("reporter_email", email);
     formData.append("location", location);
+    if (latitude !== null) formData.append("latitude", latitude.toString());
+    if (longitude !== null) formData.append("longitude", longitude.toString());
     formData.append("description", description);
     formData.append("photo", photo);
 
@@ -237,18 +248,21 @@ export const PublicReportPage = () => {
 
       toast.dismiss(loadingId);
       const serverMessage = response.data?.message || "Laporan berhasil dikirim!";
-      toast.showSuccess(serverMessage + " Mengalihkan ke beranda...", 8000);
+      toast.showSuccess(serverMessage);
       setName("");
       setEmail("");
       setLocation("");
       setDescription("");
       setPhoto(null);
       setPhotoPreview(null);
+      setLatitude(null);
+      setLongitude(null);
+      setSuggestions([]);
+      setShowSuggestions(false);
       
-      // Auto redirect back to home page after 6 seconds
-      setTimeout(() => {
-        navigate("/");
-      }, 6000);
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.setView([-6.2088, 106.8456], 12);
+      }
     } catch (err: any) {
       toast.dismiss(loadingId);
       toast.showError(err.response?.data?.error || "Gagal mengirim laporan. Pastikan koneksi server aktif.");
@@ -375,6 +389,8 @@ export const PublicReportPage = () => {
                             if (item.lat && item.lon) {
                               const lat = parseFloat(item.lat);
                               const lng = parseFloat(item.lon);
+                              setLatitude(lat);
+                              setLongitude(lng);
                               updateMapPosition(lat, lng);
                             }
                           }}

@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, Loader2, AlertCircle, Calendar, CheckCircle2, User as UserIcon, MapPin } from "lucide-react";
 import { SiteHeader } from "../components/SiteHeader";
 import { SiteFooter } from "../components/SiteFooter";
+import { ImageModal } from "../components/ImageModal";
 import client from "../api/client";
 
 interface Report {
@@ -35,6 +36,7 @@ export const PublicReportDetailPage = () => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activePhoto, setActivePhoto] = useState<{ src: string; alt: string } | null>(null);
 
   const mapInstanceRef = useRef<any>(null);
   const [mapCoords, setMapCoords] = useState<[number, number] | null>(null);
@@ -249,7 +251,11 @@ export const PublicReportDetailPage = () => {
                   <img
                     src={`data:image/jpeg;base64,${report.photo}`}
                     alt="Bukti Kerusakan"
-                    className="max-h-full object-contain"
+                    className="max-h-full object-contain cursor-zoom-in"
+                    onClick={() => setActivePhoto({
+                      src: `data:image/jpeg;base64,${report.photo}`,
+                      alt: `Bukti Kerusakan - ID: ${report.uid}`
+                    })}
                   />
                 </div>
               )}
@@ -302,7 +308,11 @@ export const PublicReportDetailPage = () => {
                     <img
                       src={`data:image/jpeg;base64,${proofComment.photo}`}
                       alt="Foto Hasil Perbaikan"
-                      className="max-h-full object-contain"
+                      className="max-h-full object-contain cursor-zoom-in"
+                      onClick={() => setActivePhoto({
+                        src: `data:image/jpeg;base64,${proofComment.photo}`,
+                        alt: `Foto Hasil Perbaikan - ID: ${report.uid}`
+                      })}
                     />
                   </div>
                 )}
@@ -362,7 +372,11 @@ export const PublicReportDetailPage = () => {
                             <img
                               src={`data:image/jpeg;base64,${comment.photo}`}
                               alt="Attachment"
-                              className="max-h-full object-contain"
+                              className="max-h-full object-contain cursor-zoom-in"
+                              onClick={() => setActivePhoto({
+                                src: `data:image/jpeg;base64,${comment.photo}`,
+                                alt: `Foto Lampiran Log Perbaikan - ID: ${report.uid}`
+                              })}
                             />
                           </div>
                         )}
@@ -375,6 +389,13 @@ export const PublicReportDetailPage = () => {
           </div>
         </div>
       </main>
+
+      <ImageModal
+        isOpen={activePhoto !== null}
+        onClose={() => setActivePhoto(null)}
+        src={activePhoto?.src || ""}
+        alt={activePhoto?.alt || ""}
+      />
 
       <SiteFooter />
     </div>

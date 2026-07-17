@@ -9,6 +9,7 @@ import {
 import client from "../../api/client";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
+import { ImageModal } from "../../components/ImageModal";
 
 interface MEStaff {
   id: number;
@@ -56,6 +57,7 @@ export const ReportDetailPage = () => {
   const [report, setReport] = useState<Report | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activePhoto, setActivePhoto] = useState<{ src: string; alt: string } | null>(null);
   
   // Support assignment states
   const [meStaffList, setMeStaffList] = useState<MEStaff[]>([]);
@@ -598,7 +600,11 @@ export const ReportDetailPage = () => {
                 <img 
                   src={`data:image/jpeg;base64,${report.photo}`} 
                   alt="Bukti Laporan" 
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover cursor-zoom-in"
+                  onClick={() => setActivePhoto({
+                    src: `data:image/jpeg;base64,${report.photo}`,
+                    alt: `Foto Bukti Kerusakan - ID: ${report.uid}`
+                  })}
                 />
               ) : (
                 <span className="text-xs text-muted">Tidak ada foto</span>
@@ -686,7 +692,11 @@ export const ReportDetailPage = () => {
                         <img 
                           src={`data:image/jpeg;base64,${comment.photo}`} 
                           alt="Lampiran Bukti" 
-                          className="max-h-40 w-full object-cover" 
+                          className="max-h-40 w-full object-cover cursor-zoom-in"
+                          onClick={() => setActivePhoto({
+                            src: `data:image/jpeg;base64,${comment.photo}`,
+                            alt: `Foto Lampiran Bukti - ID: ${report.uid}`
+                          })}
                         />
                       </div>
                     )}
@@ -1176,6 +1186,13 @@ export const ReportDetailPage = () => {
           </button>
         </div>
       )}
+
+      <ImageModal
+        isOpen={activePhoto !== null}
+        onClose={() => setActivePhoto(null)}
+        src={activePhoto?.src || ""}
+        alt={activePhoto?.alt || ""}
+      />
     </div>
   );
 };

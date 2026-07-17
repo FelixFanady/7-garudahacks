@@ -21,6 +21,8 @@ type Report struct {
 	ID             uint         `json:"id" gorm:"primaryKey"`
 	UID            string       `json:"uid" gorm:"type:varchar(6);uniqueIndex;not null"`
 	Location       string       `json:"location" gorm:"type:varchar(255);not null"`
+	Latitude       float64      `json:"latitude"`
+	Longitude      float64      `json:"longitude"`
 	Description    string       `json:"description" gorm:"type:text;not null"`
 	ReporterName   string       `json:"reporter_name" gorm:"type:varchar(100)"`
 	ReporterEmail  string       `json:"reporter_email" gorm:"type:varchar(255)"`

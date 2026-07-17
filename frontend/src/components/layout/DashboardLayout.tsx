@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import sigapLogo from "../photos/SIGAP Logo.png";
+import sigapLogo from "../../photos/siap_logo.png";
 import {
   ShieldCheck,
   LayoutDashboard,

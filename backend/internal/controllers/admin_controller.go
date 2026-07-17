@@ -108,6 +108,22 @@ func (h *AdminController) ToggleBanUser(c *gin.Context) {
 		return
 	}
 
+	authUserVal, exists := c.Get("authUser")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	authUser, ok := authUserVal.(models.User)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	if user.ID == authUser.ID {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "tidak dapat memblokir/mengaktifkan akun sendiri"})
+		return
+	}
+
 	user.IsBanned = req.IsBanned
 	if err := h.db.Save(&user).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update user status"})
@@ -179,6 +195,22 @@ func (h *AdminController) DeleteUser(c *gin.Context) {
 
 	if user.Email == "admin@sigap.gov" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "tidak dapat menghapus akun admin utama"})
+		return
+	}
+
+	authUserVal, exists := c.Get("authUser")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	authUser, ok := authUserVal.(models.User)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	if user.ID == authUser.ID {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "tidak dapat menghapus akun sendiri"})
 		return
 	}
 

@@ -15,6 +15,7 @@ import { MapRoutingPreview } from "../components/MapRoutingPreview";
 import { SiteHeader } from "../components/SiteHeader";
 import { SiteFooter } from "../components/SiteFooter";
 import client from "../api/client";
+import mapImage from "../photos/map_1.png";
 
 export const HomePage = () => {
   interface Report {
@@ -131,7 +132,7 @@ export const HomePage = () => {
                 </span>
               </a>
               <a
-                href="#rute"
+                href="/maps"
                 className="flex flex-col items-center gap-2 group text-center w-20"
               >
                 <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-success shadow-sm border border-emerald-100/50 transition duration-300 group-hover:scale-105 group-hover:shadow-md group-hover:bg-brand-600 group-hover:text-white">
@@ -156,28 +157,8 @@ export const HomePage = () => {
           </div>
         </div>
 
-        <div className="relative min-h-[420px] overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
-          <div className="absolute inset-0 [background-image:linear-gradient(90deg,rgba(102,112,133,0.13)_1px,transparent_1px),linear-gradient(rgba(102,112,133,0.13)_1px,transparent_1px)] [background-size:56px_56px]" />
-          <div className="absolute left-8 top-8 rounded-xl bg-white p-4 shadow-soft">
-            <MapPinned className="text-brand-600" size={28} />
-            <p className="mt-3 text-sm font-semibold text-ink">
-              Deteksi titik risiko
-            </p>
-            <p className="mt-1 text-xs text-muted">
-              Koordinat, status, dan prioritas.
-            </p>
-          </div>
-          <div className="absolute bottom-8 right-8 w-64 rounded-xl bg-white p-5 shadow-soft">
-            <BarChart3 className="text-success" size={26} />
-            <p className="mt-3 text-3xl font-semibold text-ink">87%</p>
-            <p className="mt-1 text-sm text-muted">
-              laporan prioritas telah diverifikasi ME.
-            </p>
-          </div>
-          <div className="absolute left-[24%] top-[48%] h-3 w-[56%] -rotate-12 rounded-full bg-brand-600/25" />
-          <div className="absolute left-[18%] top-[64%] h-3 w-[48%] rotate-6 rounded-full bg-emerald-500/25" />
-          <span className="absolute left-[54%] top-[37%] h-5 w-5 rounded-full bg-danger ring-8 ring-orange-100" />
-          <span className="absolute left-[30%] top-[66%] h-5 w-5 rounded-full bg-brand-600 ring-8 ring-blue-100" />
+        <div className="relative min-h-[420px] overflow-hidden rounded-2xl border border-line bg-surface shadow-soft flex items-center justify-center">
+          <img src={mapImage} alt="Deteksi Titik Risiko Map" className="w-full h-full object-cover" />
         </div>
       </section>
 

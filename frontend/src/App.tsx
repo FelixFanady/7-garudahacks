@@ -9,6 +9,7 @@ import { LoginPage } from "./pages/LoginPage";
 import { PublicReportPage } from "./pages/PublicReportPage";
 import { TransparansiPage } from "./pages/TransparansiPage";
 import { PublicReportDetailPage } from "./pages/PublicReportDetailPage";
+import { FullMapPage } from "./pages/FullMapPage";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { CreateUserPage } from "./pages/admin/CreateUserPage";
 import { StaffListPage } from "./pages/admin/StaffListPage";
@@ -27,6 +28,7 @@ const App = () => {
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/lapor" element={<PublicReportPage />} />
+            <Route path="/maps" element={<FullMapPage />} />
             <Route path="/laporan/transparansi" element={<TransparansiPage />} />
             <Route path="/laporan/transparansi/:id" element={<PublicReportDetailPage />} />
 

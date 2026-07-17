@@ -32,6 +32,10 @@ func main() {
 		log.Fatalf("failed to seed admin user: %v", err)
 	}
 
+	if err := seeder.SeedReports(db); err != nil {
+		log.Fatalf("failed to seed reports: %v", err)
+	}
+
 	router := routes.Setup(db, cfg)
 
 	if err := router.Run(":" + cfg.AppPort); err != nil {

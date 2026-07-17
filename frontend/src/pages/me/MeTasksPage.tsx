@@ -35,6 +35,7 @@ import {
 import client from "../../api/client";
 import { useToast } from "../../context/ToastContext";
 import { useAuth } from "../../context/AuthContext";
+import { ImageModal } from "../../components/ImageModal";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 interface Report {
@@ -173,6 +174,7 @@ const DetailPanel = ({
   const toast = useToast();
   const [report, setReport] = useState<Report>(task);
   const [comments, setComments] = useState<Comment[]>([]);
+  const [activePhoto, setActivePhoto] = useState<{ src: string; alt: string } | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(true);
   const [chatMessage, setChatMessage] = useState("");
   const [chatPhoto, setChatPhoto] = useState<File | null>(null);
@@ -499,7 +501,11 @@ const DetailPanel = ({
                 <img
                   src={`data:image/jpeg;base64,${report.photo}`}
                   alt="Bukti"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover cursor-zoom-in"
+                  onClick={() => setActivePhoto({
+                    src: `data:image/jpeg;base64,${report.photo}`,
+                    alt: `Foto Kerusakan - ID: ${report.uid}`
+                  })}
                 />
               ) : (
                 <div className="flex flex-col items-center gap-1 text-muted">
@@ -610,7 +616,11 @@ const DetailPanel = ({
                           <img
                             src={`data:image/jpeg;base64,${comment.photo}`}
                             alt="Lampiran"
-                            className="max-h-32 w-full object-cover"
+                            className="max-h-32 w-full object-cover cursor-zoom-in"
+                            onClick={() => setActivePhoto({
+                              src: `data:image/jpeg;base64,${comment.photo}`,
+                              alt: `Foto Lampiran - ID: ${report.uid}`
+                            })}
                           />
                         </div>
                       )}
@@ -714,6 +724,13 @@ const DetailPanel = ({
           </button>
         </div>
       )}
+
+      <ImageModal
+        isOpen={activePhoto !== null}
+        onClose={() => setActivePhoto(null)}
+        src={activePhoto?.src || ""}
+        alt={activePhoto?.alt || ""}
+      />
     </div>
   );
 };

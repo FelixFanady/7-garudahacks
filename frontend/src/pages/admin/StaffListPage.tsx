@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import client from "../../api/client";
 import { useToast } from "../../context/ToastContext";
+import { useAuth } from "../../context/AuthContext";
 
 interface StaffUser {
   id: number;
@@ -25,6 +26,7 @@ interface StaffUser {
 
 export const StaffListPage = () => {
   const toast = useToast();
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<StaffUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -68,7 +70,7 @@ export const StaffListPage = () => {
   }, []);
 
   const handleToggleBan = async (user: StaffUser) => {
-    if (user.email === "admin@sigap.gov") return;
+    if (user.email === "admin@sigap.gov" || (currentUser && user.id === currentUser.id)) return;
 
     const loadingId = toast.showLoading(
       user.is_banned ? "Mengaktifkan akun..." : "Memblokir akun...",
@@ -143,7 +145,7 @@ export const StaffListPage = () => {
   };
 
   const handleDeleteClick = (user: StaffUser) => {
-    if (user.email === "admin@sigap.gov") return;
+    if (user.email === "admin@sigap.gov" || (currentUser && user.id === currentUser.id)) return;
     setUserToDelete(user);
     setIsDeleteModalOpen(true);
   };
@@ -301,7 +303,7 @@ export const StaffListPage = () => {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
-                        {user.email !== "admin@sigap.gov" && (
+                        {user.email !== "admin@sigap.gov" && currentUser && user.id !== currentUser.id && (
                           <>
                             <button
                               onClick={() => handleToggleBan(user)}

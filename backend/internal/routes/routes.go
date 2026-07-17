@@ -16,12 +16,7 @@ func Setup(db *gorm.DB, cfg config.Config) *gin.Engine {
 
 	// Setup CORS middleware
 	corsConfig := cors.DefaultConfig()
-	corsConfig.AllowOrigins = []string{
-		"http://localhost:5173",
-		"http://localhost:3000",
-		"http://127.0.0.1:5173",
-		"http://127.0.0.1:3000",
-	}
+	corsConfig.AllowAllOrigins = true
 	corsConfig.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
 	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
 	router.Use(cors.New(corsConfig))

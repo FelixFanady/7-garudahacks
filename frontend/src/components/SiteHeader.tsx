@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import sigapLogo from "./photos/SIGAP Logo.png";
+import sigapLogo from "../photos/siap_logo.png";
 
 export const SiteHeader = () => {
   const { user } = useAuth();
@@ -26,7 +26,7 @@ export const SiteHeader = () => {
           <a className="transition hover:text-ink" href="/lapor">
             Laporkan Jalan
           </a>
-          <a className="transition hover:text-ink" href="/#rute">
+          <a className="transition hover:text-ink" href="/maps">
             Rute Aman
           </a>
           <a className="transition hover:text-ink" href="/laporan/transparansi">

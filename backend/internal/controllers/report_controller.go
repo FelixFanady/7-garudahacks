@@ -61,6 +61,16 @@ func (h *ReportController) CreateCitizenReport(c *gin.Context) {
 	description := c.PostForm("description")
 	reporterName := c.PostForm("reporter_name")
 	reporterEmail := c.PostForm("reporter_email")
+	latitudeStr := c.PostForm("latitude")
+	longitudeStr := c.PostForm("longitude")
+
+	var latitude, longitude float64
+	if latitudeStr != "" {
+		latitude, _ = strconv.ParseFloat(latitudeStr, 64)
+	}
+	if longitudeStr != "" {
+		longitude, _ = strconv.ParseFloat(longitudeStr, 64)
+	}
 
 	if location == "" || description == "" || reporterName == "" || reporterEmail == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "nama, email, lokasi, dan laporan wajib diisi"})
@@ -87,7 +97,6 @@ func (h *ReportController) CreateCitizenReport(c *gin.Context) {
 	}
 
 	// Analisis gambar menggunakan AI microservice
-	var activeMEs []models.User
 	var assignedMEs []models.User
 	isAutoVerified := false
 	scheduledDate := time.Now().AddDate(0, 1, 0) // 1 bulan dari sekarang
@@ -102,22 +111,50 @@ func (h *ReportController) CreateCitizenReport(c *gin.Context) {
 		description = fmt.Sprintf("[AI Auto-Verified: %d lubang terdeteksi]\n%s", detectionsCount, description)
 		isAutoVerified = true
 
-		// Query ME yang aktif (tidak diblokir)
-		if err := h.db.Where("role = ? AND is_banned = ?", models.RoleME, false).Order("id asc").Find(&activeMEs).Error; err == nil && len(activeMEs) > 0 {
-			// Tentukan jumlah ME yang dialokasikan berdasarkan keparahan
-			meToAssignCount := 1
-			if detectionsCount >= 3 {
-				// Jika parah (>= 3 lubang), alokasikan 2-3 ME jika slot tersedia
-				meToAssignCount = 3
-				if len(activeMEs) < 3 {
-					meToAssignCount = len(activeMEs)
+		// Query ME yang aktif (tidak diblokir) dan urutkan berdasarkan jumlah tugas yang belum selesai (status != SELESAI)
+		type MEWithCount struct {
+			models.User
+			UnfinishedCount int `gorm:"column:unfinished_count"`
+		}
+		var activeMECounts []MEWithCount
+
+		err := h.db.Model(&models.User{}).
+			Select("users.*, COUNT(reports.id) as unfinished_count").
+			Joins("LEFT JOIN report_assigned_me ON report_assigned_me.user_id = users.id").
+			Joins("LEFT JOIN reports ON reports.id = report_assigned_me.report_id AND reports.status != ?", models.StatusSelesai).
+			Where("users.role = ? AND users.is_banned = ?", models.RoleME, false).
+			Group("users.id").
+			Order("COUNT(reports.id) ASC, users.id ASC").
+			Find(&activeMECounts).Error
+
+		if err == nil && len(activeMECounts) > 0 {
+			// Saring ME yang tidak terlalu sibuk (misalnya unfinished_count < 5)
+			const maxTasksThreshold = 5
+			var availableMEs []models.User
+			for _, me := range activeMECounts {
+				if me.UnfinishedCount < maxTasksThreshold {
+					availableMEs = append(availableMEs, me.User)
 				}
 			}
-			assignedMEs = activeMEs[:meToAssignCount]
-			reportStatus = models.StatusDijadwalkan
+
+			if len(availableMEs) > 0 {
+				// Tentukan jumlah ME yang dialokasikan berdasarkan keparahan
+				meToAssignCount := 1
+				if detectionsCount >= 3 {
+					// Jika parah (>= 3 lubang), alokasikan 3 ME jika slot tersedia
+					meToAssignCount = 3
+					if len(availableMEs) < 3 {
+						meToAssignCount = len(availableMEs)
+					}
+				}
+				assignedMEs = availableMEs[:meToAssignCount]
+				reportStatus = models.StatusDijadwalkan
+			} else {
+				log.Printf("[AI Integration] Warning: Semua staf ME sedang sibuk (tugas >= %d). Alihkan ke manual.", maxTasksThreshold)
+				isAutoVerified = false
+			}
 		} else {
-			log.Printf("[AI Integration] Warning: Tidak ada staf ME aktif yang tersedia untuk penugasan otomatis. Alihkan ke manual.")
-			// Tetap manual jika tidak ada ME tersedia
+			log.Printf("[AI Integration] Warning: Gagal query staf ME atau tidak ada staf ME aktif. Alihkan ke manual: %v", err)
 			isAutoVerified = false
 		}
 	} else {
@@ -129,6 +166,8 @@ func (h *ReportController) CreateCitizenReport(c *gin.Context) {
 		report = models.Report{
 			UID:           generateReportUID(h.db),
 			Location:      location,
+			Latitude:      latitude,
+			Longitude:     longitude,
 			Description:   description,
 			ReporterName:  reporterName,
 			ReporterEmail: reporterEmail,
@@ -142,6 +181,8 @@ func (h *ReportController) CreateCitizenReport(c *gin.Context) {
 		report = models.Report{
 			UID:           generateReportUID(h.db),
 			Location:      location,
+			Latitude:      latitude,
+			Longitude:     longitude,
 			Description:   description,
 			ReporterName:  reporterName,
 			ReporterEmail: reporterEmail,
@@ -168,20 +209,7 @@ func (h *ReportController) CreateCitizenReport(c *gin.Context) {
 	utils.SendReceiptEmail(report.ReporterEmail, report.ReporterName, report.Location)
 
 	// Persiapkan response message
-	var responseMessage string
-	if isAutoVerified {
-		meNames := []string{}
-		for _, me := range assignedMEs {
-			meNames = append(meNames, me.Email)
-		}
-		meListStr := "tidak ada ME tersedia"
-		if len(meNames) > 0 {
-			meListStr = strings.Join(meNames, ", ")
-		}
-		responseMessage = fmt.Sprintf("Laporan terverifikasi otomatis oleh AI karena terdeteksi %d lubang! Perbaikan telah dijadwalkan dengan tenggat waktu 1 bulan (ME ditugaskan: %s).", detectionsCount, meListStr)
-	} else {
-		responseMessage = "Laporan berhasil dikirim dan akan diverifikasi secara manual oleh tim Support."
-	}
+	responseMessage := "Laporan berhasil dikirim dan sedang diproses."
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": responseMessage,
@@ -193,6 +221,16 @@ func (h *ReportController) CreateCitizenReport(c *gin.Context) {
 func (h *ReportController) CreateSystemReportPath(c *gin.Context) {
 	location := c.PostForm("location")
 	description := c.PostForm("description")
+	latitudeStr := c.PostForm("latitude")
+	longitudeStr := c.PostForm("longitude")
+
+	var latitude, longitude float64
+	if latitudeStr != "" {
+		latitude, _ = strconv.ParseFloat(latitudeStr, 64)
+	}
+	if longitudeStr != "" {
+		longitude, _ = strconv.ParseFloat(longitudeStr, 64)
+	}
 
 	if location == "" || description == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "lokasi dan deskripsi sistem wajib diisi"})
@@ -235,6 +273,8 @@ func (h *ReportController) CreateSystemReportPath(c *gin.Context) {
 	report := models.Report{
 		UID:           generateReportUID(h.db),
 		Location:      location,
+		Latitude:      latitude,
+		Longitude:     longitude,
 		Description:   description,
 		Photo:         photoBytes,
 		Source:        models.SourceSystem,
@@ -523,6 +563,8 @@ type publicReportResponse struct {
 	ID            uint       `json:"id"`
 	UID           string     `json:"uid"`
 	Location      string     `json:"location"`
+	Latitude      float64    `json:"latitude"`
+	Longitude     float64    `json:"longitude"`
 	Description   string     `json:"description"`
 	Photo         []byte     `json:"photo"`
 	Source        string     `json:"source"`
@@ -545,6 +587,8 @@ func (h *ReportController) ListPublicReports(c *gin.Context) {
 			ID:            r.ID,
 			UID:           r.UID,
 			Location:      r.Location,
+			Latitude:      r.Latitude,
+			Longitude:     r.Longitude,
 			Description:   r.Description,
 			Photo:         r.Photo,
 			Source:        string(r.Source),
@@ -595,6 +639,8 @@ func (h *ReportController) GetPublicReportDetails(c *gin.Context) {
 		"id":                report.ID,
 		"uid":               report.UID,
 		"location":          report.Location,
+		"latitude":          report.Latitude,
+		"longitude":         report.Longitude,
 		"description":       report.Description,
 		"photo":             report.Photo,
 		"source":            report.Source,

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { LockKeyhole, Loader2, ArrowLeft, Mail } from "lucide-react";
-import sigapLogo from "../components/photos/SIGAP Logo.png";
+import sigapLogo from "../photos/siap_logo.png";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import client from "../api/client";
