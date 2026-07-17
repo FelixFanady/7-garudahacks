@@ -1,797 +1,943 @@
 <!-- templates/index.html -->
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PyResearch - Pothole Detection Dashboard</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SIGAP JALAN - Pothole Detection Dashboard</title>
     <!-- Import Outfit Google Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        :root {
-            --bg-color: #0d0f14;
-            --card-bg: rgba(20, 24, 33, 0.7);
-            --primary: #0055FF;
-            --primary-hover: #0044CC;
-            --primary-glow: rgba(0, 85, 255, 0.4);
-            --text-color: #f3f4f6;
-            --text-muted: #9ca3af;
-            --border: rgba(255, 255, 255, 0.08);
-            --success: #10b981;
-            --warning: #f59e0b;
-        }
+      :root {
+        --bg-color: #0d0f14;
+        --card-bg: rgba(20, 24, 33, 0.7);
+        --primary: #0055ff;
+        --primary-hover: #0044cc;
+        --primary-glow: rgba(0, 85, 255, 0.4);
+        --text-color: #f3f4f6;
+        --text-muted: #9ca3af;
+        --border: rgba(255, 255, 255, 0.08);
+        --success: #10b981;
+        --warning: #f59e0b;
+      }
 
-        body {
-            margin: 0;
-            font-family: 'Outfit', sans-serif;
-            background-color: var(--bg-color);
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(0, 85, 255, 0.1) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.05) 0px, transparent 50%);
-            color: var(--text-color);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow-x: hidden;
-        }
+      body {
+        margin: 0;
+        font-family: "Outfit", sans-serif;
+        background-color: var(--bg-color);
+        background-image:
+          radial-gradient(at 0% 0%, rgba(0, 85, 255, 0.1) 0px, transparent 50%),
+          radial-gradient(
+            at 100% 100%,
+            rgba(16, 185, 129, 0.05) 0px,
+            transparent 50%
+          );
+        color: var(--text-color);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow-x: hidden;
+      }
 
-        /* Header styling */
-        .header {
-            background: rgba(13, 15, 20, 0.8);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--border);
-            padding: 1.5rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
+      /* Header styling */
+      .header {
+        background: rgba(13, 15, 20, 0.8);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--border);
+        padding: 1.5rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
 
-        .header h1 {
-            margin: 0;
-            font-size: 1.8rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #fff 30%, var(--primary) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+      .header h1 {
+        margin: 0;
+        font-size: 1.8rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #fff 30%, var(--primary) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
 
-        .header h1::before {
-            content: "";
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            background-color: var(--primary);
-            border-radius: 50%;
-            box-shadow: 0 0 10px var(--primary);
-        }
+      .header h1::before {
+        content: "";
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        background-color: var(--primary);
+        border-radius: 50%;
+        box-shadow: 0 0 10px var(--primary);
+      }
 
-        .header p {
-            margin: 5px 0 0 0;
-            font-size: 0.9rem;
-            color: var(--text-muted);
-        }
+      .header p {
+        margin: 5px 0 0 0;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+      }
 
-        .brand-badge {
-            background: rgba(0, 85, 255, 0.1);
-            border: 1px solid rgba(0, 85, 255, 0.2);
-            color: var(--primary);
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-        }
+      .brand-badge {
+        background: rgba(0, 85, 255, 0.1);
+        border: 1px solid rgba(0, 85, 255, 0.2);
+        color: var(--primary);
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+      }
 
-        /* Main layout container */
+      /* Main layout container */
+      .dashboard-container {
+        max-width: 1400px;
+        width: 90%;
+        margin: 40px auto;
+        display: grid;
+        grid-template-columns: 1.8fr 1fr;
+        gap: 30px;
+        flex-grow: 1;
+      }
+
+      @media (max-width: 1024px) {
         .dashboard-container {
-            max-width: 1400px;
-            width: 90%;
-            margin: 40px auto;
-            display: grid;
-            grid-template-columns: 1.8fr 1fr;
-            gap: 30px;
-            flex-grow: 1;
+          grid-template-columns: 1fr;
+          margin: 20px auto;
         }
+      }
 
-        @media (max-width: 1024px) {
-            .dashboard-container {
-                grid-template-columns: 1fr;
-                margin: 20px auto;
-            }
-        }
+      /* Video / Output Viewer */
+      .viewer-card {
+        background: var(--card-bg);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+      }
 
-        /* Video / Output Viewer */
-        .viewer-card {
-            background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            overflow: hidden;
-        }
+      .viewer-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+      }
 
-        .viewer-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
+      .viewer-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-color);
+      }
 
-        .viewer-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--text-color);
-        }
+      .live-indicator {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--success);
+        background: rgba(16, 185, 129, 0.1);
+        padding: 4px 10px;
+        border-radius: 12px;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+      }
 
-        .live-indicator {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--success);
-            background: rgba(16, 185, 129, 0.1);
-            padding: 4px 10px;
-            border-radius: 12px;
-            border: 1px solid rgba(16, 185, 129, 0.2);
-        }
+      .live-indicator .pulse {
+        width: 8px;
+        height: 8px;
+        background-color: var(--success);
+        border-radius: 50%;
+        animation: pulse-anim 1.5s infinite;
+      }
 
-        .live-indicator .pulse {
-            width: 8px;
-            height: 8px;
-            background-color: var(--success);
-            border-radius: 50%;
-            animation: pulse-anim 1.5s infinite;
+      @keyframes pulse-anim {
+        0% {
+          transform: scale(0.8);
+          opacity: 0.5;
         }
+        50% {
+          transform: scale(1.2);
+          opacity: 1;
+        }
+        100% {
+          transform: scale(0.8);
+          opacity: 0.5;
+        }
+      }
 
-        @keyframes pulse-anim {
-            0% { transform: scale(0.8); opacity: 0.5; }
-            50% { transform: scale(1.2); opacity: 1; }
-            100% { transform: scale(0.8); opacity: 0.5; }
-        }
+      .media-viewport {
+        width: 100%;
+        aspect-ratio: 16/9;
+        background-color: #050608;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        position: relative;
+      }
 
-        .media-viewport {
-            width: 100%;
-            aspect-ratio: 16/9;
-            background-color: #050608;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            position: relative;
-        }
+      .media-viewport img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
 
-        .media-viewport img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
+      /* Sidebar Stats & Controls */
+      .sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+      }
 
-        /* Sidebar Stats & Controls */
-        .sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-        }
+      .stats-panel {
+        background: var(--card-bg);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      }
 
-        .stats-panel {
-            background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
+      .stats-panel h2 {
+        margin: 0 0 20px 0;
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: var(--text-color);
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
 
-        .stats-panel h2 {
-            margin: 0 0 20px 0;
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: var(--text-color);
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+      .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+      }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
+      .stat-item {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 15px;
+        text-align: center;
+        transition: all 0.3s ease;
+      }
 
-        .stat-item {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 15px;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
+      .stat-item:hover {
+        border-color: rgba(0, 85, 255, 0.3);
+        background: rgba(0, 85, 255, 0.02);
+        transform: translateY(-2px);
+      }
 
-        .stat-item:hover {
-            border-color: rgba(0, 85, 255, 0.3);
-            background: rgba(0, 85, 255, 0.02);
-            transform: translateY(-2px);
-        }
+      .stat-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: 4px;
+      }
 
-        .stat-value {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 4px;
-        }
+      .stat-value.potholes {
+        color: #ef4444;
+        font-size: 2.2rem;
+        text-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
+      }
 
-        .stat-value.potholes {
-            color: #ef4444;
-            font-size: 2.2rem;
-            text-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
-        }
+      .stat-label {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
 
-        .stat-label {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+      /* Controls / Tabs Options */
+      .controls-panel {
+        background: var(--card-bg);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      }
 
-        /* Controls / Tabs Options */
-        .controls-panel {
-            background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
+      .controls-panel h2 {
+        margin: 0 0 20px 0;
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: var(--text-color);
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 12px;
+      }
 
-        .controls-panel h2 {
-            margin: 0 0 20px 0;
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: var(--text-color);
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 12px;
-        }
+      .tabs-menu {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
 
-        .tabs-menu {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
+      .tab-btn {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border);
+        color: var(--text-color);
+        padding: 10px 5px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+      }
 
-        .tab-btn {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--border);
-            color: var(--text-color);
-            padding: 10px 5px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-        }
+      .tab-btn:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.2);
+      }
 
-        .tab-btn:hover {
-            background: rgba(255, 255, 255, 0.06);
-            border-color: rgba(255, 255, 255, 0.2);
-        }
+      .tab-btn.active {
+        background: var(--primary);
+        border-color: var(--primary);
+        box-shadow: 0 0 15px var(--primary-glow);
+      }
 
-        .tab-btn.active {
-            background: var(--primary);
-            border-color: var(--primary);
-            box-shadow: 0 0 15px var(--primary-glow);
-        }
+      .tab-content {
+        display: none;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px dashed rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        transition: all 0.3s ease;
+      }
 
-        .tab-content {
-            display: none;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px dashed rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
+      .tab-content.active {
+        display: block;
+      }
 
-        .tab-content.active {
-            display: block;
-        }
+      /* Upload files styling */
+      .upload-zone {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        gap: 12px;
+      }
 
-        /* Upload files styling */
-        .upload-zone {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            gap: 12px;
-        }
+      .upload-icon {
+        font-size: 2rem;
+        color: var(--primary);
+      }
 
-        .upload-icon {
-            font-size: 2rem;
-            color: var(--primary);
-        }
+      .upload-text {
+        font-size: 0.9rem;
+        color: var(--text-color);
+        margin: 0;
+        font-weight: 500;
+      }
 
-        .upload-text {
-            font-size: 0.9rem;
-            color: var(--text-color);
-            margin: 0;
-            font-weight: 500;
-        }
+      .upload-subtext {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin: 0;
+      }
 
-        .upload-subtext {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin: 0;
-        }
+      .file-input {
+        display: none;
+      }
 
-        .file-input {
-            display: none;
-        }
+      .btn-action {
+        background: var(--primary);
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 10px rgba(0, 85, 255, 0.2);
+        margin-top: 10px;
+      }
 
-        .btn-action {
-            background: var(--primary);
-            border: none;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 10px rgba(0, 85, 255, 0.2);
-            margin-top: 10px;
-        }
+      .btn-action:hover {
+        background: var(--primary-hover);
+        transform: translateY(-1px);
+      }
 
-        .btn-action:hover {
-            background: var(--primary-hover);
-            transform: translateY(-1px);
-        }
+      .btn-reset {
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+        margin-top: 15px;
+      }
 
-        .btn-reset {
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            color: #ef4444;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            width: 100%;
-            margin-top: 15px;
-        }
+      .btn-reset:hover {
+        background: rgba(239, 68, 68, 0.25);
+      }
 
-        .btn-reset:hover {
-            background: rgba(239, 68, 68, 0.25);
-        }
+      /* Loading Spinner */
+      .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(13, 15, 20, 0.85);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        gap: 15px;
+        z-index: 10;
+      }
 
-        /* Loading Spinner */
-        .loading-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(13, 15, 20, 0.85);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            gap: 15px;
-            z-index: 10;
-        }
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(255, 255, 255, 0.1);
+        border-top-color: var(--primary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
 
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid rgba(255, 255, 255, 0.1);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
         }
+      }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+      .footer {
+        background: rgba(13, 15, 20, 0.9);
+        border-top: 1px solid var(--border);
+        padding: 1.5rem;
+        text-align: center;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-top: auto;
+      }
 
-        .footer {
-            background: rgba(13, 15, 20, 0.9);
-            border-top: 1px solid var(--border);
-            padding: 1.5rem;
-            text-align: center;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-top: auto;
-        }
-
-        .footer p {
-            margin: 5px 0;
-        }
+      .footer p {
+        margin: 5px 0;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <!-- Header -->
     <header class="header">
-        <div>
-            <h1>PyResearch - Pothole Detection Hub</h1>
-            <p>Advanced Computer Vision & Road Health Analytics</p>
-        </div>
-        <span class="brand-badge">YOLOv8 DETECTOR</span>
+      <div>
+        <h1>SIGAP JALAN - Pothole Detection Hub</h1>
+        <p>Advanced Computer Vision & Road Health Analytics</p>
+      </div>
+      <span class="brand-badge">YOLOv26 DETECTOR</span>
     </header>
 
     <!-- Dashboard Content -->
     <main class="dashboard-container">
-        <!-- Main Media Output Viewport -->
-        <section class="viewer-card">
-            <div class="viewer-header">
-                <span class="viewer-title" id="feed-title">Default Demo Stream</span>
-                <div class="live-indicator" id="live-indicator">
-                    <span class="pulse"></span>
-                    <span id="indicator-text">LIVE DEMO</span>
-                </div>
+      <!-- Main Media Output Viewport -->
+      <section class="viewer-card">
+        <div class="viewer-header">
+          <span class="viewer-title" id="feed-title">Default Demo Stream</span>
+          <div class="live-indicator" id="live-indicator">
+            <span class="pulse"></span>
+            <span id="indicator-text">LIVE DEMO</span>
+          </div>
+        </div>
+
+        <div class="media-viewport">
+          <!-- Main output canvas/image -->
+          <img
+            id="main-feed"
+            src="/video_feed"
+            alt="Pothole Detection Stream"
+          />
+
+          <!-- Loading Overlay -->
+          <div class="loading-overlay" id="loading-overlay">
+            <div class="spinner"></div>
+            <p style="margin: 0; font-size: 0.9rem; font-weight: 500">
+              Processing input file...
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sidebar (Stats & Input Options) -->
+      <aside class="sidebar">
+        <!-- Detection statistics -->
+        <article class="stats-panel">
+          <h2>Analysis Metrics</h2>
+          <div class="stats-grid">
+            <div
+              class="stat-item"
+              style="
+                grid-column: span 2;
+                background: rgba(239, 68, 68, 0.05);
+                border-color: rgba(239, 68, 68, 0.15);
+              "
+            >
+              <div class="stat-value potholes" id="detections-display">0</div>
+              <div class="stat-label">Potholes Detected</div>
             </div>
-            
-            <div class="media-viewport">
-                <!-- Main output canvas/image -->
-                <img id="main-feed" src="/video_feed" alt="Pothole Detection Stream">
-                
-                <!-- Loading Overlay -->
-                <div class="loading-overlay" id="loading-overlay">
-                    <div class="spinner"></div>
-                    <p style="margin: 0; font-size: 0.9rem; font-weight: 500;">Processing input file...</p>
-                </div>
+            <div class="stat-item" style="grid-column: span 2">
+              <div
+                class="stat-value"
+                id="status-display"
+                style="color: var(--success); font-size: 1.2rem"
+              >
+                Running
+              </div>
+              <div class="stat-label">System Status</div>
             </div>
-        </section>
+            <div
+              class="stat-item"
+              style="
+                grid-column: span 2;
+                background: rgba(255, 255, 255, 0.02);
+                text-align: left;
+                padding: 15px;
+                border-color: rgba(255, 255, 255, 0.05);
+              "
+            >
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  margin-bottom: 8px;
+                "
+              >
+                <span class="stat-label" style="margin: 0; font-size: 0.85rem"
+                  >Confidence Threshold</span
+                >
+                <span
+                  class="stat-value"
+                  id="conf-val"
+                  style="font-size: 1.2rem; margin: 0; color: var(--primary)"
+                  >0.25</span
+                >
+              </div>
+              <input
+                type="range"
+                id="conf-slider"
+                min="0.05"
+                max="0.9"
+                step="0.05"
+                value="0.25"
+                style="
+                  width: 100%;
+                  cursor: pointer;
+                  accent-color: var(--primary);
+                "
+                oninput="updateConfidenceDisplay(this.value)"
+                onchange="applyConfidence(this.value)"
+              />
+            </div>
+          </div>
+        </article>
 
-        <!-- Sidebar (Stats & Input Options) -->
-        <aside class="sidebar">
-            <!-- Detection statistics -->
-            <article class="stats-panel">
-                <h2>Analysis Metrics</h2>
-                <div class="stats-grid">
-                    <div class="stat-item" style="grid-column: span 2; background: rgba(239, 68, 68, 0.05); border-color: rgba(239, 68, 68, 0.15);">
-                        <div class="stat-value potholes" id="detections-display">0</div>
-                        <div class="stat-label">Potholes Detected</div>
-                    </div>
-                    <div class="stat-item" style="grid-column: span 2;">
-                        <div class="stat-value" id="status-display" style="color: var(--success); font-size: 1.2rem;">Running</div>
-                        <div class="stat-label">System Status</div>
-                    </div>
-                    <div class="stat-item" style="grid-column: span 2; background: rgba(255, 255, 255, 0.02); text-align: left; padding: 15px; border-color: rgba(255, 255, 255, 0.05);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <span class="stat-label" style="margin: 0; font-size: 0.85rem;">Confidence Threshold</span>
-                            <span class="stat-value" id="conf-val" style="font-size: 1.2rem; margin: 0; color: var(--primary);">0.25</span>
-                        </div>
-                        <input type="range" id="conf-slider" min="0.05" max="0.9" step="0.05" value="0.25" style="width: 100%; cursor: pointer; accent-color: var(--primary);" oninput="updateConfidenceDisplay(this.value)" onchange="applyConfidence(this.value)">
-                    </div>
-                </div>
-            </article>
+        <!-- Control Actions -->
+        <article class="controls-panel">
+          <h2>Select Input Source</h2>
 
-            <!-- Control Actions -->
-            <article class="controls-panel">
-                <h2>Select Input Source</h2>
-                
-                <!-- Option tabs -->
-                <div class="tabs-menu">
-                    <button class="tab-btn active" onclick="switchTab('default')">
-                        <span style="font-size: 1.2rem;">🎬</span>
-                        <span>Demo</span>
-                    </button>
-                    <button class="tab-btn" onclick="switchTab('webcam')">
-                        <span style="font-size: 1.2rem;">📹</span>
-                        <span>Webcam</span>
-                    </button>
-                    <button class="tab-btn" onclick="switchTab('upload')">
-                        <span style="font-size: 1.2rem;">📁</span>
-                        <span>Upload</span>
-                    </button>
-                </div>
+          <!-- Option tabs -->
+          <div class="tabs-menu">
+            <button class="tab-btn active" onclick="switchTab('default')">
+              <span style="font-size: 1.2rem">🎬</span>
+              <span>Demo</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('webcam')">
+              <span style="font-size: 1.2rem">📹</span>
+              <span>Webcam</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('upload')">
+              <span style="font-size: 1.2rem">📁</span>
+              <span>Upload</span>
+            </button>
+          </div>
 
-                <!-- Tab 1: Default Video -->
-                <div class="tab-content active" id="content-default">
-                    <p class="upload-subtext" style="margin-bottom: 15px;">Run pothole detection on the default pre-recorded road test video.</p>
-                    <button class="btn-action" onclick="useDefaultVideo()">Play Demo Video</button>
-                </div>
+          <!-- Tab 1: Default Video -->
+          <div class="tab-content active" id="content-default">
+            <p class="upload-subtext" style="margin-bottom: 15px">
+              Run pothole detection on the default pre-recorded road test video.
+            </p>
+            <button class="btn-action" onclick="useDefaultVideo()">
+              Play Demo Video
+            </button>
+          </div>
 
-                <!-- Tab 2: Live Webcam -->
-                <div class="tab-content" id="content-webcam">
-                    <p class="upload-subtext" style="margin-bottom: 15px;">Connect your local webcam or external USB camera to scan in real-time.</p>
-                    <button class="btn-action" onclick="useWebcam()">Activate Webcam</button>
-                </div>
+          <!-- Tab 2: Live Webcam -->
+          <div class="tab-content" id="content-webcam">
+            <p class="upload-subtext" style="margin-bottom: 15px">
+              Connect your local webcam or external USB camera to scan in
+              real-time.
+            </p>
+            <button class="btn-action" onclick="useWebcam()">
+              Activate Webcam
+            </button>
+          </div>
 
-                <!-- Tab 3: Upload Files (Photo / Video) -->
-                <div class="tab-content" id="content-upload">
-                    <p class="upload-subtext" style="margin-bottom: 15px; font-weight: 500;">Select image or video file to process:</p>
-                    
-                    <div style="display: flex; gap: 10px; flex-direction: column;">
-                        <!-- Upload Photo Zone -->
-                        <div class="stat-item" style="cursor: pointer; padding: 12px 10px;" onclick="document.getElementById('photo-input').click()">
-                            <div class="upload-icon">📷</div>
-                            <p class="upload-text" style="font-size: 0.85rem; margin-top: 5px;">Upload Photo (JPG/PNG)</p>
-                            <input type="file" id="photo-input" class="file-input" accept="image/*" onchange="uploadImage(event)">
-                        </div>
+          <!-- Tab 3: Upload Files (Photo / Video) -->
+          <div class="tab-content" id="content-upload">
+            <p
+              class="upload-subtext"
+              style="margin-bottom: 15px; font-weight: 500"
+            >
+              Select image or video file to process:
+            </p>
 
-                        <!-- Upload Video Zone -->
-                        <div class="stat-item" style="cursor: pointer; padding: 12px 10px;" onclick="document.getElementById('video-input').click()">
-                            <div class="upload-icon">🎥</div>
-                            <p class="upload-text" style="font-size: 0.85rem; margin-top: 5px;">Upload Video (MP4/AVI)</p>
-                            <input type="file" id="video-input" class="file-input" accept="video/*" onchange="uploadVideo(event)">
-                        </div>
-                    </div>
-                </div>
+            <div style="display: flex; gap: 10px; flex-direction: column">
+              <!-- Upload Photo Zone -->
+              <div
+                class="stat-item"
+                style="cursor: pointer; padding: 12px 10px"
+                onclick="document.getElementById('photo-input').click()"
+              >
+                <div class="upload-icon">📷</div>
+                <p
+                  class="upload-text"
+                  style="font-size: 0.85rem; margin-top: 5px"
+                >
+                  Upload Photo (JPG/PNG)
+                </p>
+                <input
+                  type="file"
+                  id="photo-input"
+                  class="file-input"
+                  accept="image/*"
+                  onchange="uploadImage(event)"
+                />
+              </div>
 
-                <!-- Reset button to fallback -->
-                <button class="btn-reset" onclick="resetSystem()">Reset Dashboard</button>
-            </article>
-        </aside>
+              <!-- Upload Video Zone -->
+              <div
+                class="stat-item"
+                style="cursor: pointer; padding: 12px 10px"
+                onclick="document.getElementById('video-input').click()"
+              >
+                <div class="upload-icon">🎥</div>
+                <p
+                  class="upload-text"
+                  style="font-size: 0.85rem; margin-top: 5px"
+                >
+                  Upload Video (MP4/AVI)
+                </p>
+                <input
+                  type="file"
+                  id="video-input"
+                  class="file-input"
+                  accept="video/*"
+                  onchange="uploadVideo(event)"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Reset button to fallback -->
+          <button class="btn-reset" onclick="resetSystem()">
+            Reset Dashboard
+          </button>
+        </article>
+      </aside>
     </main>
 
     <!-- Footer -->
     <footer class="footer">
-        <p>© 2026 PyResearch. All rights reserved.</p>
-        <p>Advanced Computer Vision Model powered by YOLOv8 on PyTorch.</p>
+      <p>© 2026 SIGAP JALAN. All rights reserved.</p>
+      <p>Advanced Computer Vision Model powered by YOLOv26 on SIGAP JALAN.</p>
     </footer>
 
     <!-- Interactive Logic scripts -->
     <script>
-        let currentMode = 'demo'; // 'demo', 'webcam', 'uploaded-video', 'photo'
-        let statsInterval = null;
-        let confidenceValue = 0.25;
-        let currentUploadedFile = null;
+      let currentMode = "demo"; // 'demo', 'webcam', 'uploaded-video', 'photo'
+      let statsInterval = null;
+      let confidenceValue = 0.25;
+      let currentUploadedFile = null;
 
-        // Switch Tab UI
-        function switchTab(type) {
-            // Update tabs active state
-            const buttons = document.querySelectorAll('.tab-btn');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            
-            const tabContents = document.querySelectorAll('.tab-content');
-            tabContents.forEach(content => content.classList.remove('active'));
-            
-            // Find matched active tab
-            if (type === 'default') {
-                buttons[0].classList.add('active');
-                document.getElementById('content-default').classList.add('active');
-            } else if (type === 'webcam') {
-                buttons[1].classList.add('active');
-                document.getElementById('content-webcam').classList.add('active');
-            } else if (type === 'upload') {
-                buttons[2].classList.add('active');
-                document.getElementById('content-upload').classList.add('active');
-            }
+      // Switch Tab UI
+      function switchTab(type) {
+        // Update tabs active state
+        const buttons = document.querySelectorAll(".tab-btn");
+        buttons.forEach((btn) => btn.classList.remove("active"));
+
+        const tabContents = document.querySelectorAll(".tab-content");
+        tabContents.forEach((content) => content.classList.remove("active"));
+
+        // Find matched active tab
+        if (type === "default") {
+          buttons[0].classList.add("active");
+          document.getElementById("content-default").classList.add("active");
+        } else if (type === "webcam") {
+          buttons[1].classList.add("active");
+          document.getElementById("content-webcam").classList.add("active");
+        } else if (type === "upload") {
+          buttons[2].classList.add("active");
+          document.getElementById("content-upload").classList.add("active");
         }
+      }
 
-        // Set backend source
-        function setBackendSource(sourceName, title, indicatorText, mode) {
-            showLoading(true);
-            fetch('/set_source', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ source: sourceName })
-            })
-            .then(res => res.json())
-            .then(data => {
-                showLoading(false);
-                if (data.success) {
-                    currentMode = mode;
-                    document.getElementById('feed-title').innerText = title;
-                    document.getElementById('indicator-text').innerText = indicatorText;
-                    
-                    const indicator = document.getElementById('live-indicator');
-                    indicator.style.color = 'var(--success)';
-                    indicator.style.borderColor = 'rgba(16, 185, 129, 0.2)';
-                    indicator.style.background = 'rgba(16, 185, 129, 0.1)';
-                    document.querySelector('.live-indicator .pulse').style.backgroundColor = 'var(--success)';
-                    
-                    document.getElementById('status-display').innerText = 'Streaming';
-                    document.getElementById('status-display').style.color = 'var(--success)';
+      // Set backend source
+      function setBackendSource(sourceName, title, indicatorText, mode) {
+        showLoading(true);
+        fetch("/set_source", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ source: sourceName }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            showLoading(false);
+            if (data.success) {
+              currentMode = mode;
+              document.getElementById("feed-title").innerText = title;
+              document.getElementById("indicator-text").innerText =
+                indicatorText;
 
-                    // Force reload the image feed passing the current confidence parameter
-                    const feed = document.getElementById('main-feed');
-                    feed.src = '/video_feed?conf=' + confidenceValue + '&t=' + new Date().getTime();
-                    
-                    // Restart stats update
-                    startPollingStats();
-                } else {
-                    alert('Error changing source: ' + data.message);
-                }
-            })
-            .catch(err => {
-                showLoading(false);
-                console.error(err);
-                alert('Connection error');
-            });
-        }
+              const indicator = document.getElementById("live-indicator");
+              indicator.style.color = "var(--success)";
+              indicator.style.borderColor = "rgba(16, 185, 129, 0.2)";
+              indicator.style.background = "rgba(16, 185, 129, 0.1)";
+              document.querySelector(
+                ".live-indicator .pulse",
+              ).style.backgroundColor = "var(--success)";
 
-        // Action: Use Default Video
-        function useDefaultVideo() {
-            setBackendSource('default', 'Default Demo Stream', 'LIVE DEMO', 'demo');
-        }
+              document.getElementById("status-display").innerText = "Streaming";
+              document.getElementById("status-display").style.color =
+                "var(--success)";
 
-        // Action: Use Webcam
-        function useWebcam() {
-            setBackendSource('webcam', 'Live Webcam Feed', 'LIVE STREAM', 'webcam');
-        }
+              // Force reload the image feed passing the current confidence parameter
+              const feed = document.getElementById("main-feed");
+              feed.src =
+                "/video_feed?conf=" +
+                confidenceValue +
+                "&t=" +
+                new Date().getTime();
 
-        // Action: Upload Video
-        function uploadVideo(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            showLoading(true);
-            const formData = new FormData();
-            formData.append('file', file);
-
-            fetch('/upload_video', {
-                method: 'POST',
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                showLoading(false);
-                if (data.success) {
-                    currentMode = 'uploaded-video';
-                    document.getElementById('feed-title').innerText = 'Processed File: ' + file.name;
-                    document.getElementById('indicator-text').innerText = 'VIDEO FILE';
-                    
-                    // Force refresh feed passing the current confidence parameter
-                    const feed = document.getElementById('main-feed');
-                    feed.src = '/video_feed?conf=' + confidenceValue + '&t=' + new Date().getTime();
-                    
-                    // Restart stats update
-                    startPollingStats();
-                } else {
-                    alert('Failed to upload video: ' + data.message);
-                }
-            })
-            .catch(err => {
-                showLoading(false);
-                console.error(err);
-                alert('Error uploading video');
-            });
-        }
-
-        // Action: Upload Image
-        function uploadImage(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            currentUploadedFile = file;
-            reprocessUploadedImage(file);
-        }
-
-        // Reprocess Uploaded Image with the active confidence value
-        function reprocessUploadedImage(file) {
-            showLoading(true);
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('conf', confidenceValue);
-
-            // Stop polling stats during static image view
-            stopPollingStats();
-
-            fetch('/upload_image', {
-                method: 'POST',
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                showLoading(false);
-                if (data.image) {
-                    currentMode = 'photo';
-                    
-                    // Update display
-                    document.getElementById('feed-title').innerText = 'Processed Image: ' + file.name;
-                    document.getElementById('indicator-text').innerText = 'STATIC RESULT';
-                    
-                    const indicator = document.getElementById('live-indicator');
-                    indicator.style.color = 'var(--warning)';
-                    indicator.style.borderColor = 'rgba(245, 158, 11, 0.2)';
-                    indicator.style.background = 'rgba(245, 158, 11, 0.1)';
-                    document.querySelector('.live-indicator .pulse').style.backgroundColor = 'var(--warning)';
-
-                    document.getElementById('status-display').innerText = 'Completed';
-                    document.getElementById('status-display').style.color = 'var(--warning)';
-                    
-                    // Show annotated image in viewer
-                    const feed = document.getElementById('main-feed');
-                    feed.src = data.image;
-
-                    // Display static detection count
-                    document.getElementById('detections-display').innerText = data.detections;
-                } else {
-                    alert('Error: ' + (data.error || 'Failed to process image'));
-                }
-            })
-            .catch(err => {
-                showLoading(false);
-                console.error(err);
-                alert('Error processing image');
-            });
-        }
-
-        // Update confidence display value real-time
-        function updateConfidenceDisplay(val) {
-            document.getElementById('conf-val').innerText = parseFloat(val).toFixed(2);
-        }
-
-        // Apply confidence threshold change and refresh source
-        function applyConfidence(val) {
-            confidenceValue = parseFloat(val);
-            if (currentMode === 'photo') {
-                if (currentUploadedFile) {
-                    reprocessUploadedImage(currentUploadedFile);
-                }
+              // Restart stats update
+              startPollingStats();
             } else {
-                const feed = document.getElementById('main-feed');
-                feed.src = '/video_feed?conf=' + confidenceValue + '&t=' + new Date().getTime();
+              alert("Error changing source: " + data.message);
             }
-        }
+          })
+          .catch((err) => {
+            showLoading(false);
+            console.error(err);
+            alert("Connection error");
+          });
+      }
 
-        // Action: Reset System
-        function resetSystem() {
-            confidenceValue = 0.25;
-            document.getElementById('conf-slider').value = 0.25;
-            document.getElementById('conf-val').innerText = '0.25';
-            currentUploadedFile = null;
-            switchTab('default');
-            useDefaultVideo();
-        }
+      // Action: Use Default Video
+      function useDefaultVideo() {
+        setBackendSource("default", "Default Demo Stream", "LIVE DEMO", "demo");
+      }
 
-        // Loading Indicator helper
-        function showLoading(show) {
-            const overlay = document.getElementById('loading-overlay');
-            overlay.style.display = show ? 'flex' : 'none';
-        }
+      // Action: Use Webcam
+      function useWebcam() {
+        setBackendSource("webcam", "Live Webcam Feed", "LIVE STREAM", "webcam");
+      }
 
-        // Poll current detection count from server
-        function updateStats() {
-            if (currentMode === 'photo') return; // Don't poll in static photo mode
-            
-            fetch('/detection_count')
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('detections-display').innerText = data.detections;
-                })
-                .catch(error => console.error('Error fetching statistics:', error));
-        }
+      // Action: Upload Video
+      function uploadVideo(event) {
+        const file = event.target.files[0];
+        if (!file) return;
 
-        function startPollingStats() {
-            stopPollingStats();
-            statsInterval = setInterval(updateStats, 1000);
-            updateStats();
-        }
+        showLoading(true);
+        const formData = new FormData();
+        formData.append("file", file);
 
-        function stopPollingStats() {
-            if (statsInterval) {
-                clearInterval(statsInterval);
-                statsInterval = null;
+        fetch("/upload_video", {
+          method: "POST",
+          body: formData,
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            showLoading(false);
+            if (data.success) {
+              currentMode = "uploaded-video";
+              document.getElementById("feed-title").innerText =
+                "Processed File: " + file.name;
+              document.getElementById("indicator-text").innerText =
+                "VIDEO FILE";
+
+              // Force refresh feed passing the current confidence parameter
+              const feed = document.getElementById("main-feed");
+              feed.src =
+                "/video_feed?conf=" +
+                confidenceValue +
+                "&t=" +
+                new Date().getTime();
+
+              // Restart stats update
+              startPollingStats();
+            } else {
+              alert("Failed to upload video: " + data.message);
             }
-        }
+          })
+          .catch((err) => {
+            showLoading(false);
+            console.error(err);
+            alert("Error uploading video");
+          });
+      }
 
-        // Start stats polling on dashboard load
-        window.addEventListener('load', () => {
-            startPollingStats();
-        });
+      // Action: Upload Image
+      function uploadImage(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        currentUploadedFile = file;
+        reprocessUploadedImage(file);
+      }
+
+      // Reprocess Uploaded Image with the active confidence value
+      function reprocessUploadedImage(file) {
+        showLoading(true);
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("conf", confidenceValue);
+
+        // Stop polling stats during static image view
+        stopPollingStats();
+
+        fetch("/upload_image", {
+          method: "POST",
+          body: formData,
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            showLoading(false);
+            if (data.image) {
+              currentMode = "photo";
+
+              // Update display
+              document.getElementById("feed-title").innerText =
+                "Processed Image: " + file.name;
+              document.getElementById("indicator-text").innerText =
+                "STATIC RESULT";
+
+              const indicator = document.getElementById("live-indicator");
+              indicator.style.color = "var(--warning)";
+              indicator.style.borderColor = "rgba(245, 158, 11, 0.2)";
+              indicator.style.background = "rgba(245, 158, 11, 0.1)";
+              document.querySelector(
+                ".live-indicator .pulse",
+              ).style.backgroundColor = "var(--warning)";
+
+              document.getElementById("status-display").innerText = "Completed";
+              document.getElementById("status-display").style.color =
+                "var(--warning)";
+
+              // Show annotated image in viewer
+              const feed = document.getElementById("main-feed");
+              feed.src = data.image;
+
+              // Display static detection count
+              document.getElementById("detections-display").innerText =
+                data.detections;
+            } else {
+              alert("Error: " + (data.error || "Failed to process image"));
+            }
+          })
+          .catch((err) => {
+            showLoading(false);
+            console.error(err);
+            alert("Error processing image");
+          });
+      }
+
+      // Update confidence display value real-time
+      function updateConfidenceDisplay(val) {
+        document.getElementById("conf-val").innerText =
+          parseFloat(val).toFixed(2);
+      }
+
+      // Apply confidence threshold change and refresh source
+      function applyConfidence(val) {
+        confidenceValue = parseFloat(val);
+        if (currentMode === "photo") {
+          if (currentUploadedFile) {
+            reprocessUploadedImage(currentUploadedFile);
+          }
+        } else {
+          const feed = document.getElementById("main-feed");
+          feed.src =
+            "/video_feed?conf=" +
+            confidenceValue +
+            "&t=" +
+            new Date().getTime();
+        }
+      }
+
+      // Action: Reset System
+      function resetSystem() {
+        confidenceValue = 0.25;
+        document.getElementById("conf-slider").value = 0.25;
+        document.getElementById("conf-val").innerText = "0.25";
+        currentUploadedFile = null;
+        switchTab("default");
+        useDefaultVideo();
+      }
+
+      // Loading Indicator helper
+      function showLoading(show) {
+        const overlay = document.getElementById("loading-overlay");
+        overlay.style.display = show ? "flex" : "none";
+      }
+
+      // Poll current detection count from server
+      function updateStats() {
+        if (currentMode === "photo") return; // Don't poll in static photo mode
+
+        fetch("/detection_count")
+          .then((response) => response.json())
+          .then((data) => {
+            document.getElementById("detections-display").innerText =
+              data.detections;
+          })
+          .catch((error) => console.error("Error fetching statistics:", error));
+      }
+
+      function startPollingStats() {
+        stopPollingStats();
+        statsInterval = setInterval(updateStats, 1000);
+        updateStats();
+      }
+
+      function stopPollingStats() {
+        if (statsInterval) {
+          clearInterval(statsInterval);
+          statsInterval = null;
+        }
+      }
+
+      // Start stats polling on dashboard load
+      window.addEventListener("load", () => {
+        startPollingStats();
+      });
     </script>
-</body>
+  </body>
 </html>

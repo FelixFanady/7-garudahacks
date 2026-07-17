@@ -1,6 +1,6 @@
 @echo off
 echo ==========================================================
-echo    Starting PyResearch Pothole Detection Dashboard...
+echo    Starting SIGAP JALAN Pothole Detection Dashboard...
 echo ==========================================================
 cd /d "%~dp0"
 if not exist .venv (

@@ -14,7 +14,7 @@ app = Flask(__name__)
 CORS(app)  # Allow cross-origin requests (Flutter emulator at 10.0.2.2)
 
 # Configuration
-PR_MODEL_PATH = "best.pt"
+SJ_MODEL_PATH = "best.pt"
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -23,11 +23,11 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 current_video_source = "demo.mp4"
 detection_count = 0
 
-class PyResearchVisualizer:
-    """PyResearch Standard Visualization Engine"""
+class SigapJalanVisualizer:
+    """SIGAP JALAN Standard Visualization Engine"""
     
     def __init__(self):
-        self.model = YOLO(PR_MODEL_PATH)
+        self.model = YOLO(SJ_MODEL_PATH)
         self.box_annotator = sv.BoxAnnotator(
             thickness=2,
             color=sv.Color.from_hex("#0055FF")
@@ -40,7 +40,7 @@ class PyResearchVisualizer:
         )
         
     def process_frame(self, frame, conf=0.25):
-        """PyResearch Standard Processing Pipeline"""
+        """SIGAP JALAN Standard Processing Pipeline"""
         global detection_count
         results = self.model(frame, conf=conf)[0]
         detections = sv.Detections.from_ultralytics(results)
@@ -48,7 +48,7 @@ class PyResearchVisualizer:
         # Update detection count
         detection_count = len(detections)  # Count the number of detections in the current frame
         
-        # Apply PyResearch Visualization Standards (using a copy to prevent modifying raw buffer)
+        # Apply SIGAP JALAN Visualization Standards (using a copy to prevent modifying raw buffer)
         annotated_frame = self.box_annotator.annotate(
             scene=frame.copy(),
             detections=detections
@@ -73,7 +73,7 @@ class PyResearchVisualizer:
 
 def generate_frames(conf=0.25):
     global current_video_source
-    visualizer = PyResearchVisualizer()
+    visualizer = SigapJalanVisualizer()
     
     # Check source
     source = current_video_source
@@ -177,7 +177,7 @@ def upload_image():
     debug_path = os.path.join(app.config['UPLOAD_FOLDER'], 'uploaded_image.jpg')
     cv2.imwrite(debug_path, image)
         
-    visualizer = PyResearchVisualizer()
+    visualizer = SigapJalanVisualizer()
     annotated_image, count = visualizer.process_frame(image, conf=conf)
     
     # Encode processed image to base64
@@ -211,7 +211,7 @@ def analyze_frame():
         return jsonify({'error': 'Invalid image data', 'detections': 0}), 400
 
     # Run YOLO detection
-    visualizer = PyResearchVisualizer()
+    visualizer = SigapJalanVisualizer()
     annotated_image, count = visualizer.process_frame(image, conf=conf)
 
     # Encode annotated frame to base64 JPEG
