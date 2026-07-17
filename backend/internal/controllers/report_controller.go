@@ -1,13 +1,21 @@
 package controllers
 
 import (
+	"bytes"
+	"encoding/base64"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
+	"log"
 	"math/rand"
+	"mime/multipart"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
+	"sigap-jalan-backend/internal/config"
 	"sigap-jalan-backend/internal/models"
 	"sigap-jalan-backend/internal/utils"
 
@@ -16,11 +24,12 @@ import (
 )
 
 type ReportController struct {
-	db *gorm.DB
+	db  *gorm.DB
+	cfg config.Config
 }
 
-func NewReportController(db *gorm.DB) *ReportController {
-	return &ReportController{db: db}
+func NewReportController(db *gorm.DB, cfg config.Config) *ReportController {
+	return &ReportController{db: db, cfg: cfg}
 }
 
 func generateReportUID(db *gorm.DB) string {
@@ -77,15 +86,70 @@ func (h *ReportController) CreateCitizenReport(c *gin.Context) {
 		return
 	}
 
-	report := models.Report{
-		UID:           generateReportUID(h.db),
-		Location:      location,
-		Description:   description,
-		ReporterName:  reporterName,
-		ReporterEmail: reporterEmail,
-		Photo:         photoBytes,
-		Source:        models.SourceCitizen,
-		Status:        models.StatusMenunggu,
+	// Analisis gambar menggunakan AI microservice
+	var activeMEs []models.User
+	var assignedMEs []models.User
+	isAutoVerified := false
+	scheduledDate := time.Now().AddDate(0, 1, 0) // 1 bulan dari sekarang
+	var reportStatus models.ReportStatus = models.StatusMenunggu
+
+	detectionsCount, annotatedBytes, err := h.CallAIBackend(photoBytes)
+	if err != nil {
+		log.Printf("[AI Integration] Warning: Gagal menghubungi AI Backend: %v", err)
+	} else if detectionsCount > 0 {
+		log.Printf("[AI Integration] Success: Terdeteksi %d lubang pada laporan masyarakat (Auto-Verified)", detectionsCount)
+		photoBytes = annotatedBytes
+		description = fmt.Sprintf("[AI Auto-Verified: %d lubang terdeteksi]\n%s", detectionsCount, description)
+		isAutoVerified = true
+
+		// Query ME yang aktif (tidak diblokir)
+		if err := h.db.Where("role = ? AND is_banned = ?", models.RoleME, false).Order("id asc").Find(&activeMEs).Error; err == nil && len(activeMEs) > 0 {
+			// Tentukan jumlah ME yang dialokasikan berdasarkan keparahan
+			meToAssignCount := 1
+			if detectionsCount >= 3 {
+				// Jika parah (>= 3 lubang), alokasikan 2-3 ME jika slot tersedia
+				meToAssignCount = 3
+				if len(activeMEs) < 3 {
+					meToAssignCount = len(activeMEs)
+				}
+			}
+			assignedMEs = activeMEs[:meToAssignCount]
+			reportStatus = models.StatusDijadwalkan
+		} else {
+			log.Printf("[AI Integration] Warning: Tidak ada staf ME aktif yang tersedia untuk penugasan otomatis. Alihkan ke manual.")
+			// Tetap manual jika tidak ada ME tersedia
+			isAutoVerified = false
+		}
+	} else {
+		log.Printf("[AI Integration] Info: Tidak terdeteksi lubang (0 lubang) pada laporan masyarakat")
+	}
+
+	var report models.Report
+	if isAutoVerified {
+		report = models.Report{
+			UID:           generateReportUID(h.db),
+			Location:      location,
+			Description:   description,
+			ReporterName:  reporterName,
+			ReporterEmail: reporterEmail,
+			Photo:         photoBytes,
+			Source:        models.SourceCitizen,
+			Status:        reportStatus,
+			ScheduledDate: &scheduledDate,
+			IsFalseReport: false,
+		}
+	} else {
+		report = models.Report{
+			UID:           generateReportUID(h.db),
+			Location:      location,
+			Description:   description,
+			ReporterName:  reporterName,
+			ReporterEmail: reporterEmail,
+			Photo:         photoBytes,
+			Source:        models.SourceCitizen,
+			Status:        reportStatus,
+			IsFalseReport: false,
+		}
 	}
 
 	if err := h.db.Create(&report).Error; err != nil {
@@ -93,11 +157,34 @@ func (h *ReportController) CreateCitizenReport(c *gin.Context) {
 		return
 	}
 
+	// Jika auto-verified dan ada ME yang ditugaskan, hubungkan many-to-many
+	if isAutoVerified && len(assignedMEs) > 0 {
+		if err := h.db.Model(&report).Association("AssignedME").Replace(&assignedMEs); err != nil {
+			log.Printf("[AI Integration] Warning: Gagal mengaitkan ME: %v", err)
+		}
+	}
+
 	// Send confirmation receipt to citizen
 	utils.SendReceiptEmail(report.ReporterEmail, report.ReporterName, report.Location)
 
+	// Persiapkan response message
+	var responseMessage string
+	if isAutoVerified {
+		meNames := []string{}
+		for _, me := range assignedMEs {
+			meNames = append(meNames, me.Email)
+		}
+		meListStr := "tidak ada ME tersedia"
+		if len(meNames) > 0 {
+			meListStr = strings.Join(meNames, ", ")
+		}
+		responseMessage = fmt.Sprintf("Laporan terverifikasi otomatis oleh AI karena terdeteksi %d lubang! Perbaikan telah dijadwalkan dengan tenggat waktu 1 bulan (ME ditugaskan: %s).", detectionsCount, meListStr)
+	} else {
+		responseMessage = "Laporan berhasil dikirim dan akan diverifikasi secara manual oleh tim Support."
+	}
+
 	c.JSON(http.StatusCreated, gin.H{
-		"message": "laporan berhasil terkirim",
+		"message": responseMessage,
 		"id":      report.ID,
 	})
 }
@@ -131,13 +218,28 @@ func (h *ReportController) CreateSystemReportPath(c *gin.Context) {
 		return
 	}
 
+	// Analisis gambar menggunakan AI microservice
+	isFalseReport := false
+	detectionsCount, annotatedBytes, err := h.CallAIBackend(photoBytes)
+	if err != nil {
+		log.Printf("[AI Integration] Warning: Gagal menghubungi AI Backend: %v", err)
+	} else {
+		log.Printf("[AI Integration] Success: Terdeteksi %d lubang pada laporan sistem", detectionsCount)
+		photoBytes = annotatedBytes
+		description = fmt.Sprintf("[AI Detection: %d lubang terdeteksi]\n%s", detectionsCount, description)
+		if detectionsCount == 0 {
+			isFalseReport = true
+		}
+	}
+
 	report := models.Report{
-		UID:         generateReportUID(h.db),
-		Location:    location,
-		Description: description,
-		Photo:       photoBytes,
-		Source:      models.SourceSystem,
-		Status:      models.StatusMenunggu,
+		UID:           generateReportUID(h.db),
+		Location:      location,
+		Description:   description,
+		Photo:         photoBytes,
+		Source:        models.SourceSystem,
+		Status:        models.StatusMenunggu,
+		IsFalseReport: isFalseReport,
 	}
 
 	if err := h.db.Create(&report).Error; err != nil {
@@ -490,16 +592,16 @@ func (h *ReportController) GetPublicReportDetails(c *gin.Context) {
 
 	// Sanitize report reporter credentials for public transparency
 	sanitizedReport := gin.H{
-		"id":               report.ID,
-		"uid":              report.UID,
-		"location":         report.Location,
-		"description":      report.Description,
-		"photo":            report.Photo,
-		"source":           report.Source,
-		"status":           report.Status,
-		"scheduled_date":   report.ScheduledDate,
+		"id":                report.ID,
+		"uid":               report.UID,
+		"location":          report.Location,
+		"description":       report.Description,
+		"photo":             report.Photo,
+		"source":            report.Source,
+		"status":            report.Status,
+		"scheduled_date":    report.ScheduledDate,
 		"assigned_me_count": len(report.AssignedME),
-		"created_at":       report.CreatedAt,
+		"created_at":        report.CreatedAt,
 	}
 
 	// Sanitize comment sender info: only expose role, never email or other PII
@@ -605,6 +707,7 @@ func (h *ReportController) SetCommentFinalProof(c *gin.Context) {
 		"is_final_proof": newStatus,
 	})
 }
+
 // ToggleFalseReport lets Support/Admin mark or unmark a report as false (hides it from public)
 func (h *ReportController) ToggleFalseReport(c *gin.Context) {
 	reportUIDOrID := c.Param("id")
@@ -637,4 +740,79 @@ func (h *ReportController) ToggleFalseReport(c *gin.Context) {
 		"message":         msg,
 		"is_false_report": newVal,
 	})
+}
+
+type AIDetectionResponse struct {
+	Detections int    `json:"detections"`
+	Image      string `json:"image"` // base64 data URI
+	Error      string `json:"error"`
+}
+
+// CallAIBackend mengirimkan foto ke server AI microservice dan mengembalikan jumlah deteksi serta gambar hasil anotasi
+func (h *ReportController) CallAIBackend(photoBytes []byte) (int, []byte, error) {
+	if h.cfg.AIBackendURL == "" {
+		return 0, nil, fmt.Errorf("AI_BACKEND_URL tidak dikonfigurasi")
+	}
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+
+	// Membuat field file dengan nama parameter "file"
+	part, err := writer.CreateFormFile("file", "image.jpg")
+	if err != nil {
+		return 0, nil, fmt.Errorf("gagal membuat form file: %w", err)
+	}
+	if _, err := io.Copy(part, bytes.NewReader(photoBytes)); err != nil {
+		return 0, nil, fmt.Errorf("gagal menyalin file bytes: %w", err)
+	}
+
+	// Menambahkan parameter conf default "0.10"
+	if err := writer.WriteField("conf", "0.10"); err != nil {
+		return 0, nil, fmt.Errorf("gagal menulis field conf: %w", err)
+	}
+
+	if err := writer.Close(); err != nil {
+		return 0, nil, fmt.Errorf("gagal menutup writer: %w", err)
+	}
+
+	req, err := http.NewRequest("POST", h.cfg.AIBackendURL+"/upload_image", body)
+	if err != nil {
+		return 0, nil, fmt.Errorf("gagal membuat request HTTP: %w", err)
+	}
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return 0, nil, fmt.Errorf("gagal melakukan request ke AI backend: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		respBodyBytes, _ := io.ReadAll(resp.Body)
+		return 0, nil, fmt.Errorf("AI backend mengembalikan status non-OK: %d, body: %s", resp.StatusCode, string(respBodyBytes))
+	}
+
+	var aiResp AIDetectionResponse
+	if err := json.NewDecoder(resp.Body).Decode(&aiResp); err != nil {
+		return 0, nil, fmt.Errorf("gagal mendecode respon JSON AI: %w", err)
+	}
+
+	if aiResp.Error != "" {
+		return 0, nil, fmt.Errorf("AI backend error: %s", aiResp.Error)
+	}
+
+	// Format base64 data:image/jpeg;base64,<data>
+	prefix := "data:image/jpeg;base64,"
+	if !strings.HasPrefix(aiResp.Image, prefix) {
+		return aiResp.Detections, nil, fmt.Errorf("format gambar AI tidak valid (missing prefix)")
+	}
+
+	base64Data := aiResp.Image[len(prefix):]
+	decodedImageBytes, err := base64.StdEncoding.DecodeString(base64Data)
+	if err != nil {
+		return aiResp.Detections, nil, fmt.Errorf("gagal mendecode base64 dari AI: %w", err)
+	}
+
+	return aiResp.Detections, decodedImageBytes, nil
 }

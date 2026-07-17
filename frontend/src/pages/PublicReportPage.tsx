@@ -229,14 +229,15 @@ export const PublicReportPage = () => {
     formData.append("photo", photo);
 
     try {
-      await client.post("/lapor", formData, {
+      const response = await client.post("/lapor", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
 
       toast.dismiss(loadingId);
-      toast.showSuccess("Laporan berhasil dikirim! Silakan cek email Anda untuk tanda terima. Mengalihkan ke beranda...", 5000);
+      const serverMessage = response.data?.message || "Laporan berhasil dikirim!";
+      toast.showSuccess(serverMessage + " Mengalihkan ke beranda...", 8000);
       setName("");
       setEmail("");
       setLocation("");
@@ -244,10 +245,10 @@ export const PublicReportPage = () => {
       setPhoto(null);
       setPhotoPreview(null);
       
-      // Auto redirect back to home page after 4 seconds
+      // Auto redirect back to home page after 6 seconds
       setTimeout(() => {
         navigate("/");
-      }, 4000);
+      }, 6000);
     } catch (err: any) {
       toast.dismiss(loadingId);
       toast.showError(err.response?.data?.error || "Gagal mengirim laporan. Pastikan koneksi server aktif.");

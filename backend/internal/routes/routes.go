@@ -17,7 +17,7 @@ func Setup(db *gorm.DB, cfg config.Config) *gin.Engine {
 	// Setup CORS middleware
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = []string{
-		"http://localhost:5173", 
+		"http://localhost:5173",
 		"http://localhost:3000",
 		"http://127.0.0.1:5173",
 		"http://127.0.0.1:3000",
@@ -28,7 +28,7 @@ func Setup(db *gorm.DB, cfg config.Config) *gin.Engine {
 
 	authController := controllers.NewAuthController(db, cfg)
 	adminController := controllers.NewAdminController(db)
-	reportController := controllers.NewReportController(db)
+	reportController := controllers.NewReportController(db, cfg)
 
 	// Public Routes
 	router.POST("/login", authController.Login)

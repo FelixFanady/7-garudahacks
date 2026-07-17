@@ -1,0 +1,41 @@
+# Python Caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Virtual Environments (Paling penting agar folder 10 ribu file tidak ter-commit)
+.venv/
+venv/
+env/
+ENV/
+lib/
+bin/
+include/
+share/
+
+# IDE dan Editor
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# File Sistem OS
+Thumbs.db
+.DS_Store
+
+# Folder Uploads/Temp Hasil Upload Project
+uploads/
+
+# Model Weights (File berat PyTorch / YOLO)
+# Hapus tanda komentar (#) di bawah jika tidak ingin commit file model weights (.pt)
+# *.pt
+# *.pth
+
+# File Demo Video (Opsional)
+# demo.mp4

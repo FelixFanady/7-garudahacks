@@ -25,6 +25,8 @@ type Config struct {
 
 	SeedAdminEmail    string
 	SeedAdminPassword string
+
+	AIBackendURL string
 }
 
 func Load() Config {
@@ -48,6 +50,8 @@ func Load() Config {
 	seedAdminEmail := mustGetEnv("SEED_ADMIN_EMAIL")
 	seedAdminPassword := mustGetEnv("SEED_ADMIN_PASSWORD")
 
+	aiBackendURL := mustGetEnv("AI_BACKEND_URL")
+
 	return Config{
 		AppPort: appPort,
 		AppEnv:  appEnv,
@@ -64,6 +68,8 @@ func Load() Config {
 
 		SeedAdminEmail:    seedAdminEmail,
 		SeedAdminPassword: seedAdminPassword,
+
+		AIBackendURL: aiBackendURL,
 	}
 }
 
