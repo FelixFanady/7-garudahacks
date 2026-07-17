@@ -103,7 +103,7 @@ func (h *AdminController) ToggleBanUser(c *gin.Context) {
 		return
 	}
 
-	if user.Email == "admin@sigap.com" && req.IsBanned {
+	if user.Email == "admin@sigap.gov" && req.IsBanned {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "tidak dapat menonaktifkan akun admin utama"})
 		return
 	}
@@ -177,7 +177,7 @@ func (h *AdminController) DeleteUser(c *gin.Context) {
 		return
 	}
 
-	if user.Email == "admin@sigap.com" {
+	if user.Email == "admin@sigap.gov" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "tidak dapat menghapus akun admin utama"})
 		return
 	}

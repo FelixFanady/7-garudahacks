@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 
 export interface User {
   id: number;
@@ -16,6 +22,10 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+let _globalLogout: (() => void) | null = null;
+
+export const getGlobalLogout = () => _globalLogout;
+
 /** Decode the JWT payload WITHOUT verifying the signature (verification is done by the backend). */
 function decodeJwtPayload(token: string): User | null {
   try {
@@ -26,7 +36,7 @@ function decodeJwtPayload(token: string): User | null {
       atob(base64)
         .split("")
         .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
+        .join(""),
     );
     const payload = JSON.parse(json);
     // Expect claims: id (or sub), email, role
@@ -44,6 +54,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    setToken(null);
+    setUser(null);
+  };
+
+  // Register global logout so axios interceptor can call it
+  useEffect(() => {
+    _globalLogout = logout;
+    return () => {
+      _globalLogout = null;
+    };
+  });
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -66,12 +90,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem("token", newToken);
     setToken(newToken);
     setUser(decoded);
-  };
-
-  const logout = () => {
-    localStorage.removeItem("token");
-    setToken(null);
-    setUser(null);
   };
 
   return (

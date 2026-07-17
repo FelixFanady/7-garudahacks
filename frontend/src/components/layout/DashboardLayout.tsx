@@ -40,11 +40,6 @@ export const DashboardLayout = () => {
       path: "/support",
       icon: LayoutDashboard,
     },
-    {
-      label: "Verifikasi Laporan",
-      path: "/support", // Point to /support for now
-      icon: CheckSquare,
-    },
   ];
 
   const meMenu = [
@@ -55,7 +50,7 @@ export const DashboardLayout = () => {
     },
     {
       label: "Tugas Perbaikan",
-      path: "/me",
+      path: "/me/tasks",
       icon: CheckSquare,
     },
   ];
@@ -85,12 +80,13 @@ export const DashboardLayout = () => {
         <nav className="flex-1 space-y-1 px-4 py-6">
           {activeMenu.map((item, index) => {
             const Icon = item.icon;
-            // Since Tugas Perbaikan and Dashboard ME might have the same path (/me),
-            // we can distinguish them by label or let them highlight normally
+            // exact match for dashboard root, prefix match for other paths
             const isActive =
-              location.pathname === item.path &&
-              (item.label !== "Tugas Perbaikan" ||
-                location.pathname.includes("/tasks"));
+              item.path === "/me" ||
+              item.path === "/admin" ||
+              item.path === "/support"
+                ? location.pathname === item.path
+                : location.pathname.startsWith(item.path);
 
             return (
               <Link

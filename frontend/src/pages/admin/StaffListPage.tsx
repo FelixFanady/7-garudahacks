@@ -1,6 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { Users, Search, Loader2, AlertCircle, CheckCircle2, UserX, UserCheck, KeyRound, Trash2, X, User, Eye, EyeOff } from "lucide-react";
+import {
+  Users,
+  Search,
+  Loader2,
+  AlertCircle,
+  UserX,
+  UserCheck,
+  KeyRound,
+  Trash2,
+  X,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import client from "../../api/client";
+import { useToast } from "../../context/ToastContext";
 
 interface StaffUser {
   id: number;
@@ -11,10 +24,9 @@ interface StaffUser {
 }
 
 export const StaffListPage = () => {
+  const toast = useToast();
   const [users, setUsers] = useState<StaffUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
 
@@ -33,12 +45,19 @@ export const StaffListPage = () => {
 
   const fetchUsers = async () => {
     setLoading(true);
-    setError(null);
+    const loadingId = toast.showLoading("Memuat daftar staf...");
     try {
       const response = await client.get("/admin/users");
       setUsers(response.data);
+      toast.dismiss(loadingId);
     } catch (err: any) {
-      setError("Gagal memuat daftar staf. Pastikan koneksi backend aktif.");
+      toast.dismiss(loadingId);
+      // 401 is handled globally by axios interceptor (auto-logout)
+      if (err?.response?.status !== 401) {
+        toast.showError(
+          "Gagal memuat daftar staf. Pastikan koneksi backend aktif.",
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -49,26 +68,34 @@ export const StaffListPage = () => {
   }, []);
 
   const handleToggleBan = async (user: StaffUser) => {
-    if (user.email === "admin@sigap.com") return;
-    
-    setError(null);
-    setSuccess(null);
+    if (user.email === "admin@sigap.gov") return;
+
+    const loadingId = toast.showLoading(
+      user.is_banned ? "Mengaktifkan akun..." : "Memblokir akun...",
+    );
     try {
       await client.put(`/admin/users/${user.id}/ban`, {
         is_banned: !user.is_banned,
       });
 
-      setUsers(prev =>
-        prev.map(u => (u.id === user.id ? { ...u, is_banned: !u.is_banned } : u))
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === user.id ? { ...u, is_banned: !u.is_banned } : u,
+        ),
       );
-      setSuccess(
+      toast.dismiss(loadingId);
+      toast.showSuccess(
         `Status akun ${user.email} berhasil diubah menjadi ${
-          !user.is_banned ? "DINONAKTIFKAN (BANNED)" : "AKTIF"
-        }.`
+          !user.is_banned ? "DINONAKTIFKAN" : "AKTIF"
+        }.`,
       );
-      setTimeout(() => setSuccess(null), 5000);
     } catch (err: any) {
-      setError(err.response?.data?.error || "Gagal mengubah status blokir staf.");
+      toast.dismiss(loadingId);
+      if (err?.response?.status !== 401) {
+        toast.showError(
+          err.response?.data?.error || "Gagal mengubah status blokir staf.",
+        );
+      }
     }
   };
 
@@ -90,25 +117,33 @@ export const StaffListPage = () => {
 
     setSubmittingPassword(true);
     setPasswordError(null);
+    const loadingId = toast.showLoading("Memperbarui password...");
     try {
       await client.put(`/admin/users/${selectedUser.id}/change-password`, {
         password: newPassword,
       });
 
-      setSuccess(`Password untuk staf ${selectedUser.email} berhasil diperbarui.`);
+      toast.dismiss(loadingId);
+      toast.showSuccess(
+        `Password untuk staf ${selectedUser.email} berhasil diperbarui.`,
+      );
       setIsPasswordModalOpen(false);
       setSelectedUser(null);
       setNewPassword("");
-      setTimeout(() => setSuccess(null), 5000);
     } catch (err: any) {
-      setPasswordError(err.response?.data?.error || "Gagal memperbarui password.");
+      toast.dismiss(loadingId);
+      if (err?.response?.status !== 401) {
+        const msg = err.response?.data?.error || "Gagal memperbarui password.";
+        setPasswordError(msg);
+        toast.showError(msg);
+      }
     } finally {
       setSubmittingPassword(false);
     }
   };
 
   const handleDeleteClick = (user: StaffUser) => {
-    if (user.email === "admin@sigap.com") return;
+    if (user.email === "admin@sigap.gov") return;
     setUserToDelete(user);
     setIsDeleteModalOpen(true);
   };
@@ -116,23 +151,31 @@ export const StaffListPage = () => {
   const handleDeleteConfirm = async () => {
     if (!userToDelete) return;
     setSubmittingDelete(true);
+    const loadingId = toast.showLoading("Menghapus akun staf...");
     try {
       await client.delete(`/admin/users/${userToDelete.id}`);
-      setSuccess(`Akun staf ${userToDelete.email} berhasil dihapus.`);
-      setUsers(prev => prev.filter(u => u.id !== userToDelete.id));
+      toast.dismiss(loadingId);
+      toast.showSuccess(`Akun staf ${userToDelete.email} berhasil dihapus.`);
+      setUsers((prev) => prev.filter((u) => u.id !== userToDelete.id));
       setIsDeleteModalOpen(false);
       setUserToDelete(null);
-      setTimeout(() => setSuccess(null), 5000);
     } catch (err: any) {
-      setError(err.response?.data?.error || "Gagal menghapus akun staf.");
+      toast.dismiss(loadingId);
+      if (err?.response?.status !== 401) {
+        toast.showError(
+          err.response?.data?.error || "Gagal menghapus akun staf.",
+        );
+      }
       setIsDeleteModalOpen(false);
     } finally {
       setSubmittingDelete(false);
     }
   };
 
-  const filteredUsers = users.filter(u => {
-    const matchesSearch = u.email.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredUsers = users.filter((u) => {
+    const matchesSearch = u.email
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === "ALL" ? true : u.role === roleFilter;
     return matchesSearch && matchesRole;
   });
@@ -147,29 +190,19 @@ export const StaffListPage = () => {
             Daftar Akun Staf
           </h1>
           <p className="mt-2 text-sm text-muted">
-            Kelola akses staf internal SIGAP JALAN. Anda bisa mengubah password, memblokir/mengaktifkan akun, atau menghapus staf dari sistem.
+            Kelola akses staf internal SIGAP JALAN. Anda bisa mengubah password,
+            memblokir/mengaktifkan akun, atau menghapus staf dari sistem.
           </p>
         </div>
       </div>
 
-      {success && (
-        <div className="flex items-start gap-2 rounded-lg bg-emerald-50 p-4 text-sm text-success ring-1 ring-emerald-100">
-          <CheckCircle2 size={18} className="shrink-0 mt-0.5" />
-          <p>{success}</p>
-        </div>
-      )}
-
-      {error && (
-        <div className="flex items-start gap-2 rounded-lg bg-red-50 p-4 text-sm text-danger ring-1 ring-red-100">
-          <AlertCircle size={18} className="shrink-0 mt-0.5" />
-          <p>{error}</p>
-        </div>
-      )}
-
       {/* Filter and Search Bar */}
       <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
         <div className="relative w-full sm:max-w-xs">
-          <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
+          <Search
+            size={18}
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted"
+          />
           <input
             type="text"
             placeholder="Cari email staf..."
@@ -221,50 +254,71 @@ export const StaffListPage = () => {
               <tbody className="divide-y divide-line">
                 {filteredUsers.map((user) => (
                   <tr key={user.id} className="hover:bg-slate-50/50 transition">
-                    <td className="px-6 py-4 text-sm font-medium text-muted">{user.id}</td>
-                    <td className="px-6 py-4 text-sm font-semibold text-ink">{user.email}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-muted">
+                      {user.id}
+                    </td>
+                    <td className="px-6 py-4 text-sm font-semibold text-ink">
+                      {user.email}
+                    </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                        user.role === "ADMIN" 
-                          ? "bg-purple-50 text-purple-700" 
-                          : user.role === "SUPPORT"
-                          ? "bg-sky-50 text-sky-700"
-                          : "bg-orange-50 text-amber-700"
-                      }`}>
+                      <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                          user.role === "ADMIN"
+                            ? "bg-purple-50 text-purple-700"
+                            : user.role === "SUPPORT"
+                              ? "bg-sky-50 text-sky-700"
+                              : "bg-orange-50 text-amber-700"
+                        }`}
+                      >
                         {user.role}
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                        user.is_banned
-                          ? "bg-red-50 text-danger"
-                          : "bg-emerald-50 text-success"
-                      }`}>
-                        <span className={`h-1.5 w-1.5 rounded-full ${user.is_banned ? "bg-danger" : "bg-success"}`} />
+                      <span
+                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                          user.is_banned
+                            ? "bg-red-50 text-danger"
+                            : "bg-emerald-50 text-success"
+                        }`}
+                      >
+                        <span
+                          className={`h-1.5 w-1.5 rounded-full ${user.is_banned ? "bg-danger" : "bg-success"}`}
+                        />
                         {user.is_banned ? "Diblokir" : "Aktif"}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-xs text-muted">
-                      {user.created_at ? new Date(user.created_at).toLocaleDateString("id-ID", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric"
-                      }) : "-"}
+                      {user.created_at
+                        ? new Date(user.created_at).toLocaleDateString(
+                            "id-ID",
+                            {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            },
+                          )
+                        : "-"}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
-                        {user.email !== "admin@sigap.com" && (
+                        {user.email !== "admin@sigap.gov" && (
                           <>
                             <button
                               onClick={() => handleToggleBan(user)}
-                              title={user.is_banned ? "Aktifkan Akun" : "Blokir Akun"}
+                              title={
+                                user.is_banned ? "Aktifkan Akun" : "Blokir Akun"
+                              }
                               className={`p-1.5 rounded-lg border transition ${
                                 user.is_banned
                                   ? "border-emerald-200 text-success hover:bg-emerald-50"
                                   : "border-red-200 text-danger hover:bg-red-50"
                               }`}
                             >
-                              {user.is_banned ? <UserCheck size={16} /> : <UserX size={16} />}
+                              {user.is_banned ? (
+                                <UserCheck size={16} />
+                              ) : (
+                                <UserX size={16} />
+                              )}
                             </button>
 
                             <button
@@ -316,7 +370,9 @@ export const StaffListPage = () => {
             <form onSubmit={handlePasswordSubmit} className="p-6 space-y-4">
               <div>
                 <p className="text-xs text-muted">Akun Staf:</p>
-                <p className="text-sm font-semibold text-ink mt-0.5">{selectedUser.email}</p>
+                <p className="text-sm font-semibold text-ink mt-0.5">
+                  {selectedUser.email}
+                </p>
               </div>
 
               {passwordError && (
@@ -327,7 +383,9 @@ export const StaffListPage = () => {
               )}
 
               <div>
-                <label className="block text-xs font-semibold text-ink">Password Baru (min. 6 karakter)</label>
+                <label className="block text-xs font-semibold text-ink">
+                  Password Baru (min. 6 karakter)
+                </label>
                 <div className="relative mt-2">
                   <input
                     type={showNewPassword ? "text" : "password"}
@@ -340,7 +398,7 @@ export const StaffListPage = () => {
                   />
                   <button
                     type="button"
-                    onClick={() => setShowNewPassword(v => !v)}
+                    onClick={() => setShowNewPassword((v) => !v)}
                     className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-ink transition"
                     tabIndex={-1}
                   >
@@ -365,7 +423,9 @@ export const StaffListPage = () => {
                   disabled={submittingPassword}
                   className="h-10 px-4 rounded-lg bg-brand-600 text-sm font-semibold text-white transition hover:bg-brand-700 disabled:opacity-70 flex items-center gap-2"
                 >
-                  {submittingPassword && <Loader2 size={14} className="animate-spin" />}
+                  {submittingPassword && (
+                    <Loader2 size={14} className="animate-spin" />
+                  )}
                   Simpan Password
                 </button>
               </div>
@@ -396,7 +456,9 @@ export const StaffListPage = () => {
 
             <div className="p-6 space-y-4">
               <p className="text-sm text-ink">
-                Apakah Anda yakin ingin menghapus akun staf <strong>{userToDelete.email}</strong>? Tindakan ini tidak dapat dibatalkan dan staf tersebut akan kehilangan semua hak akses.
+                Apakah Anda yakin ingin menghapus akun staf{" "}
+                <strong>{userToDelete.email}</strong>? Tindakan ini tidak dapat
+                dibatalkan dan staf tersebut akan kehilangan semua hak akses.
               </p>
 
               <div className="flex justify-end gap-2 pt-2">
@@ -416,7 +478,9 @@ export const StaffListPage = () => {
                   disabled={submittingDelete}
                   className="h-10 px-4 rounded-lg bg-danger text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-70 flex items-center gap-2"
                 >
-                  {submittingDelete && <Loader2 size={14} className="animate-spin" />}
+                  {submittingDelete && (
+                    <Loader2 size={14} className="animate-spin" />
+                  )}
                   Hapus Permanen
                 </button>
               </div>

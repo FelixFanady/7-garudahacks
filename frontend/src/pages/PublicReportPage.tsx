@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Camera, Loader2, AlertCircle, CheckCircle2, MapPin } from "lucide-react";
+import { ArrowLeft, Camera, Loader2, MapPin, AlertCircle, CheckCircle2 } from "lucide-react";
 import client from "../api/client";
 import { SiteHeader } from "../components/SiteHeader";
 import { SiteFooter } from "../components/SiteFooter";
+import { useToast } from "../context/ToastContext";
 
 export const PublicReportPage = () => {
   const [name, setName] = useState("");
@@ -13,8 +14,6 @@ export const PublicReportPage = () => {
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   // Autocomplete and Maps states
   const [suggestions, setSuggestions] = useState<any[]>([]);
@@ -23,6 +22,7 @@ export const PublicReportPage = () => {
   const [searchError, setSearchError] = useState<string | null>(null);
 
   const navigate = useNavigate();
+  const toast = useToast();
   const searchTimeoutRef = React.useRef<any>(null);
 
   // Leaflet Map Refs
@@ -212,15 +212,14 @@ export const PublicReportPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setSuccess(null);
 
     if (!photo) {
-      setError("Silakan unggah foto bukti jalan berlubang/rusak.");
+      toast.showError("Silakan unggah foto bukti jalan berlubang/rusak.");
       return;
     }
 
     setIsLoading(true);
+    const loadingId = toast.showLoading("Mengirim laporan Anda...");
 
     const formData = new FormData();
     formData.append("reporter_name", name);
@@ -236,7 +235,8 @@ export const PublicReportPage = () => {
         },
       });
 
-      setSuccess("Laporan Anda berhasil dikirim! Silakan periksa email Anda untuk tanda terima laporan.");
+      toast.dismiss(loadingId);
+      toast.showSuccess("Laporan berhasil dikirim! Silakan cek email Anda untuk tanda terima. Mengalihkan ke beranda...", 5000);
       setName("");
       setEmail("");
       setLocation("");
@@ -249,7 +249,8 @@ export const PublicReportPage = () => {
         navigate("/");
       }, 4000);
     } catch (err: any) {
-      setError(err.response?.data?.error || "Gagal mengirim laporan. Pastikan koneksi server aktif.");
+      toast.dismiss(loadingId);
+      toast.showError(err.response?.data?.error || "Gagal mengirim laporan. Pastikan koneksi server aktif.");
     } finally {
       setIsLoading(false);
     }
@@ -282,20 +283,6 @@ export const PublicReportPage = () => {
 
           {/* Form Block */}
           <div className="rounded-2xl border border-line bg-white p-8 shadow-sm">
-            {success && (
-              <div className="mb-6 flex items-start gap-2 rounded-lg bg-emerald-50 p-4 text-sm text-success ring-1 ring-emerald-100">
-                <CheckCircle2 size={18} className="shrink-0 mt-0.5" />
-                <p>{success}</p>
-              </div>
-            )}
-
-            {error && (
-              <div className="mb-6 flex items-start gap-2 rounded-lg bg-red-50 p-4 text-sm text-danger ring-1 ring-red-100">
-                <AlertCircle size={18} className="shrink-0 mt-0.5" />
-                <p>{error}</p>
-              </div>
-            )}
-
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid gap-6 sm:grid-cols-2">
                 <div>

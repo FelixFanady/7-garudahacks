@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { LockKeyhole, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
+import { LockKeyhole, ShieldCheck, Loader2 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 import client from "../api/client";
 
 export const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const { login, user, loading } = useAuth();
+  const toast = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -37,27 +38,26 @@ export const LoginPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     setIsLoading(true);
+    const loadingId = toast.showLoading("Memproses login...");
 
     try {
       const response = await client.post("/login", { email, password });
       const { token: newToken } = response.data;
-
+      toast.dismiss(loadingId);
+      toast.showSuccess("Login berhasil! Mengalihkan ke dashboard...");
       login(newToken);
-
-      // Role-based redirect is handled by the useEffect below (user state update triggers it)
     } catch (err: any) {
+      toast.dismiss(loadingId);
       if (err.response && err.response.data && err.response.data.error) {
-        // Translation for common errors
         const errMsg = err.response.data.error;
         if (errMsg === "invalid email or password") {
-          setError("Email atau password salah.");
+          toast.showError("Email atau password salah. Coba lagi.");
         } else {
-          setError(errMsg);
+          toast.showError(errMsg);
         }
       } else {
-        setError("Koneksi gagal. Pastikan server backend Anda berjalan.");
+        toast.showError("Koneksi gagal. Pastikan server backend Anda berjalan.");
       }
     } finally {
       setIsLoading(false);
@@ -83,12 +83,7 @@ export const LoginPage = () => {
           </p>
         </div>
 
-        {error && (
-          <div className="mt-6 flex items-center gap-2 rounded-lg bg-red-50 p-4 text-sm text-danger ring-1 ring-red-100">
-            <AlertCircle size={18} className="shrink-0" />
-            <p>{error}</p>
-          </div>
-        )}
+
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-5">
           <label className="block">

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ShieldCheck, CheckCircle2, Clock, ShieldAlert, ChevronRight, Loader2, RefreshCw, BarChart2 } from "lucide-react";
 import client from "../../api/client";
+import { useToast } from "../../context/ToastContext";
 
 interface Report {
   id: number;
@@ -18,18 +19,23 @@ interface Report {
 }
 
 export const SupportDashboard = () => {
+  const toast = useToast();
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchReports = async () => {
+  const fetchReports = async (isRefresh = false) => {
     setLoading(true);
-    setError(null);
+    const loadingId = toast.showLoading(isRefresh ? "Memperbarui data laporan..." : "Memuat data laporan...");
     try {
       const response = await client.get("/support/reports");
       setReports(response.data);
+      toast.dismiss(loadingId);
+      if (isRefresh) toast.showSuccess("Data laporan berhasil diperbarui.");
     } catch (err: any) {
-      setError("Gagal memuat laporan. Pastikan koneksi server aktif.");
+      toast.dismiss(loadingId);
+      if (err?.response?.status !== 401) {
+        toast.showError("Gagal memuat laporan. Pastikan koneksi server aktif.");
+      }
     } finally {
       setLoading(false);
     }
@@ -59,7 +65,7 @@ export const SupportDashboard = () => {
           </p>
         </div>
         <button
-          onClick={fetchReports}
+          onClick={() => fetchReports(true)}
           className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-line bg-white text-muted hover:text-ink transition shrink-0"
           title="Refresh Data"
         >
@@ -67,12 +73,6 @@ export const SupportDashboard = () => {
         </button>
       </div>
 
-      {error && (
-        <div className="flex items-start gap-2 rounded-lg bg-red-50 p-4 text-sm text-danger ring-1 ring-red-100">
-          <ShieldAlert size={18} className="shrink-0 mt-0.5" />
-          <p>{error}</p>
-        </div>
-      )}
 
       {/* Stats */}
       <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">

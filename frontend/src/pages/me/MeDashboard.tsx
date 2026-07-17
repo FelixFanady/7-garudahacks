@@ -2,16 +2,15 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   HardHat,
-  AlertCircle,
   Clock,
   CheckCircle2,
   ChevronRight,
   Loader2,
-  Calendar as CalendarIcon,
   ChevronLeft,
   ChevronRight as ChevronRightIcon,
 } from "lucide-react";
 import client from "../../api/client";
+import { useToast } from "../../context/ToastContext";
 
 interface Report {
   id: number;
@@ -24,9 +23,9 @@ interface Report {
 }
 
 export const MeDashboard = () => {
+  const toast = useToast();
   const [tasks, setTasks] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   // Calendar States
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -37,12 +36,16 @@ export const MeDashboard = () => {
 
   const fetchTasks = async () => {
     setLoading(true);
-    setError(null);
+    const loadingId = toast.showLoading("Memuat daftar tugas...");
     try {
       const response = await client.get("/me/reports");
       setTasks(response.data);
+      toast.dismiss(loadingId);
     } catch (err: any) {
-      setError("Gagal memuat tugas. Pastikan koneksi server aktif.");
+      toast.dismiss(loadingId);
+      if (err?.response?.status !== 401) {
+        toast.showError("Gagal memuat tugas. Pastikan koneksi server aktif.");
+      }
     } finally {
       setLoading(false);
     }
@@ -163,12 +166,6 @@ export const MeDashboard = () => {
         </p>
       </div>
 
-      {error && (
-        <div className="flex items-start gap-2 rounded-lg bg-red-50 p-4 text-sm text-danger ring-1 ring-red-100">
-          <AlertCircle size={18} className="shrink-0 mt-0.5" />
-          <p>{error}</p>
-        </div>
-      )}
 
       {/* Stats Grid */}
       <div className="grid gap-5 sm:grid-cols-3">

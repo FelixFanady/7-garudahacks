@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import client from "../../api/client";
 import { useAuth } from "../../context/AuthContext";
+import { useToast } from "../../context/ToastContext";
 
 interface MEStaff {
   id: number;
@@ -49,18 +50,18 @@ interface Report {
 export const ReportDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const toast = useToast();
+  const [fetchError, setFetchError] = useState<string | null>(null);
   
   const [report, setReport] = useState<Report | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   
   // Support assignment states
   const [meStaffList, setMeStaffList] = useState<MEStaff[]>([]);
   const [selectedMeIds, setSelectedMeIds] = useState<string[]>([]);
   const [scheduledDate, setScheduledDate] = useState("");
   const [assignLoading, setAssignLoading] = useState(false);
-  const [assignSuccess, setAssignSuccess] = useState<string | null>(null);
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -236,16 +237,15 @@ export const ReportDetailPage = () => {
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const fetchDetails = async (silent = false) => {
-    if (!silent) {
-      setError(null);
-    }
     try {
       const response = await client.get(`/reports/${id}`);
       setReport(response.data.report);
       setComments(response.data.comments);
     } catch (err: any) {
       if (!silent) {
-        setError("Gagal memuat detail laporan. Pastikan ID laporan valid.");
+        if (err?.response?.status !== 401) {
+          setFetchError("Gagal memuat detail laporan. Pastikan ID laporan valid.");
+        }
       }
     } finally {
       if (!silent) {
@@ -308,7 +308,7 @@ export const ReportDetailPage = () => {
   const handleAssign = async (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedMeIds.length === 0 || !scheduledDate) {
-      setError("Silakan pilih minimal satu petugas ME dan tanggal pengerjaan.");
+      toast.showError("Silakan pilih minimal satu petugas ME dan tanggal pengerjaan.");
       return;
     }
 
@@ -317,13 +317,12 @@ export const ReportDetailPage = () => {
     const targetDate = new Date(scheduledDate);
     targetDate.setHours(0, 0, 0, 0);
     if (targetDate.getTime() < today.getTime()) {
-      setError("Tanggal pengerjaan tidak boleh hari sebelumnya.");
+      toast.showError("Tanggal pengerjaan tidak boleh hari sebelumnya.");
       return;
     }
 
     setAssignLoading(true);
-    setError(null);
-    setAssignSuccess(null);
+    const loadingId = toast.showLoading("Menjadwalkan tugas perbaikan...");
 
     try {
       const response = await client.put(`/support/reports/${id}/schedule`, {
@@ -332,12 +331,15 @@ export const ReportDetailPage = () => {
       });
 
       setReport(response.data.report);
-      setAssignSuccess("Perbaikan berhasil dijadwalkan dan ditugaskan.");
-      setTimeout(() => setAssignSuccess(null), 5000);
+      toast.dismiss(loadingId);
+      toast.showSuccess("Perbaikan berhasil dijadwalkan dan ditugaskan.");
       setIsEditing(false);
-      fetchDetails(); // Reload comments/logs
+      fetchDetails();
     } catch (err: any) {
-      setError(err.response?.data?.error || "Gagal menjadwalkan tugas.");
+      toast.dismiss(loadingId);
+      if (err?.response?.status !== 401) {
+        toast.showError(err.response?.data?.error || "Gagal menjadwalkan tugas.");
+      }
     } finally {
       setAssignLoading(false);
     }
@@ -351,14 +353,17 @@ export const ReportDetailPage = () => {
     if (!window.confirm(confirmMsg)) return;
 
     setFalseReportLoading(true);
-    setError(null);
+    const loadingId = toast.showLoading("Memperbarui status laporan...");
     try {
       const response = await client.put(`/support/reports/${id}/false-report`);
       setReport(prev => prev ? { ...prev, is_false_report: response.data.is_false_report } : prev);
-      setAssignSuccess(response.data.message);
-      setTimeout(() => setAssignSuccess(null), 5000);
+      toast.dismiss(loadingId);
+      toast.showSuccess(response.data.message);
     } catch (err: any) {
-      setError(err.response?.data?.error || "Gagal mengubah status laporan palsu.");
+      toast.dismiss(loadingId);
+      if (err?.response?.status !== 401) {
+        toast.showError(err.response?.data?.error || "Gagal mengubah status laporan palsu.");
+      }
     } finally {
       setFalseReportLoading(false);
     }
@@ -370,14 +375,17 @@ export const ReportDetailPage = () => {
     }
 
     setCompleteLoading(true);
-    setError(null);
+    const loadingId = toast.showLoading("Menyelesaikan tugas...");
     try {
       await client.put(`/me/reports/${id}/status`);
-      setAssignSuccess("Tugas berhasil diselesaikan! Status laporan terupdate.");
-      setTimeout(() => setAssignSuccess(null), 5000);
+      toast.dismiss(loadingId);
+      toast.showSuccess("Tugas berhasil diselesaikan! Status laporan terupdate.");
       fetchDetails();
     } catch (err: any) {
-      setError(err.response?.data?.error || "Gagal mengupdate status tugas.");
+      toast.dismiss(loadingId);
+      if (err?.response?.status !== 401) {
+        toast.showError(err.response?.data?.error || "Gagal mengupdate status tugas.");
+      }
     } finally {
       setCompleteLoading(false);
     }
@@ -402,7 +410,7 @@ export const ReportDetailPage = () => {
     if (!chatMessage.trim() && !chatPhoto) return;
 
     setSendingChat(true);
-    setError(null);
+    const loadingId = toast.showLoading("Mengirim komentar...");
 
     const formData = new FormData();
     formData.append("message", chatMessage);
@@ -420,15 +428,22 @@ export const ReportDetailPage = () => {
         },
       });
 
+      toast.dismiss(loadingId);
       setComments(prev => [...prev, response.data]);
       setChatMessage("");
       handleRemoveChatPhoto();
       if (isProof) {
         setIsProof(false);
+        toast.showSuccess("Bukti penyelesaian berhasil dikirim.");
         fetchDetails();
+      } else {
+        toast.showSuccess("Komentar berhasil dikirim.");
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || "Gagal mengirim chat/komentar.");
+      toast.dismiss(loadingId);
+      if (err?.response?.status !== 401) {
+        toast.showError(err.response?.data?.error || "Gagal mengirim chat/komentar.");
+      }
     } finally {
       setSendingChat(false);
     }
@@ -443,12 +458,12 @@ export const ReportDetailPage = () => {
     );
   }
 
-  if (error && !report) {
+  if (fetchError && !report) {
     return (
       <div className="rounded-xl border border-red-100 bg-red-50 p-6 text-center max-w-xl mx-auto">
         <AlertCircle className="mx-auto text-danger mb-2" size={32} />
         <h4 className="font-semibold text-danger">Gagal Memuat Detail</h4>
-        <p className="text-sm text-red-700 mt-1">{error}</p>
+        <p className="text-sm text-red-700 mt-1">{fetchError}</p>
         <Link to={user?.role === "ME" ? "/me" : "/support"} className="mt-4 inline-flex h-9 items-center justify-center rounded-lg bg-brand-600 px-4 text-xs font-semibold text-white hover:bg-brand-700">
           Kembali ke Dashboard
         </Link>
@@ -766,12 +781,7 @@ export const ReportDetailPage = () => {
         </div>
       )}
 
-      {assignSuccess && (
-        <div className="flex items-start gap-2 rounded-lg bg-emerald-50 p-4 text-sm text-success ring-1 ring-emerald-100">
-          <CheckCircle2 size={18} className="shrink-0 mt-0.5" />
-          <p>{assignSuccess}</p>
-        </div>
-      )}
+
 
       {hasSidebar ? (
         <div className="grid gap-6 lg:grid-cols-3">
@@ -1144,11 +1154,16 @@ export const ReportDetailPage = () => {
         >
           <button
             onClick={async () => {
+              const actionName = contextMenu.isFinalProof ? "Menghapus bukti final..." : "Menetapkan bukti final...";
+              const loadingId = toast.showLoading(actionName);
               try {
                 await client.put(`/reports/${id}/comments/${contextMenu.commentId}/final-proof`);
+                toast.dismiss(loadingId);
+                toast.showSuccess(contextMenu.isFinalProof ? "Bukti final berhasil dihapus." : "Bukti final berhasil ditetapkan.");
                 fetchDetails(true); // reload silently
               } catch (err: any) {
-                alert("Gagal memperbarui status bukti final.");
+                toast.dismiss(loadingId);
+                toast.showError(err.response?.data?.error || "Gagal memperbarui status bukti final.");
               }
               setContextMenu(null);
             }}

@@ -1,22 +1,21 @@
 import React, { useState } from "react";
-import { UserPlus, Loader2, AlertCircle, CheckCircle2, Eye, EyeOff } from "lucide-react";
+import { UserPlus, Loader2, Eye, EyeOff } from "lucide-react";
 import client from "../../api/client";
+import { useToast } from "../../context/ToastContext";
 
 export const CreateUserPage = () => {
+  const toast = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState("ME");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setSuccess(null);
     setIsLoading(true);
 
+    const loadingId = toast.showLoading("Membuat akun staf...");
     try {
       await client.post("/admin/create-user", {
         email,
@@ -24,22 +23,25 @@ export const CreateUserPage = () => {
         role,
       });
 
-      setSuccess(`Akun staf dengan email ${email} dan peran ${role} berhasil dibuat.`);
+      toast.dismiss(loadingId);
+      toast.showSuccess(`Akun staf dengan email ${email} dan peran ${role} berhasil dibuat.`);
       setEmail("");
       setPassword("");
       setRole("ME");
     } catch (err: any) {
+      toast.dismiss(loadingId);
+      if (err?.response?.status === 401) return; // handled globally
       if (err.response && err.response.data && err.response.data.error) {
         const errMsg = err.response.data.error;
         if (errMsg === "email already exists") {
-          setError("Email sudah terdaftar.");
+          toast.showError("Email sudah terdaftar.");
         } else if (errMsg.includes("min=6")) {
-          setError("Password minimal harus 6 karakter.");
+          toast.showError("Password minimal harus 6 karakter.");
         } else {
-          setError(errMsg);
+          toast.showError(errMsg);
         }
       } else {
-        setError("Gagal membuat akun. Pastikan koneksi server backend terhubung.");
+        toast.showError("Gagal membuat akun. Pastikan koneksi server backend terhubung.");
       }
     } finally {
       setIsLoading(false);
@@ -59,20 +61,6 @@ export const CreateUserPage = () => {
       </div>
 
       <div className="rounded-xl border border-line bg-white p-6 shadow-sm">
-        {success && (
-          <div className="mb-6 flex items-start gap-2 rounded-lg bg-emerald-50 p-4 text-sm text-success ring-1 ring-emerald-100">
-            <CheckCircle2 size={18} className="shrink-0 mt-0.5" />
-            <p>{success}</p>
-          </div>
-        )}
-
-        {error && (
-          <div className="mb-6 flex items-start gap-2 rounded-lg bg-red-50 p-4 text-sm text-danger ring-1 ring-red-100">
-            <AlertCircle size={18} className="shrink-0 mt-0.5" />
-            <p>{error}</p>
-          </div>
-        )}
-
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-ink">
